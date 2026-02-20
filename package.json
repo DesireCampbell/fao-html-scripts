@@ -2,6 +2,10 @@
   "name": "fao-html-scripts",
   "displayName": "FAO HTML Scripts",
   "description": "A collection of scripts to help in HTML production",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DesireCampbell/fao-html-scripts.git"
+  },
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.109.0"
@@ -16,6 +20,18 @@
       {
         "command": "fao-html-scripts.helloWorld",
         "title": "Hello World"
+      },
+      {
+        "command": "fao-html-scripts.pasteAsHTML",
+        "title": "Paste as HTML"
+      },
+      {
+        "command": "fao-html-scripts.stripStyles",
+        "title": "Strip Styles"
+      },
+      {
+        "command": "fao-html-scripts.formatCharts",
+        "title": "Format Charts"
       }
     ]
   },
