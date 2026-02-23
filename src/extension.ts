@@ -1,18 +1,21 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-	console.log('Congratulations, your extension "fao-html-scripts" is now active!');
+	// console.log('fao-html-scripts is now active.');
 
-	
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// HELPER FUNCTIONS  - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// Get Text in Selection or Document
 	const getCurrentSelectionOrDocumentText = () => {
 		const editor = vscode.window.activeTextEditor;
-		if (!editor) { return; }
+		if (!editor) { 
+			vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [getCurrentSelectionOrDocumentText]');
+			return; 
+		}
 		const document = editor.document;
 		const selection = editor.selection;
 		if (selection.isEmpty) {
@@ -26,7 +29,10 @@ export function activate(context: vscode.ExtensionContext) {
 	// Replace Text in Selection or Document
 	const replaceCurrentSelectionOrDocumentText = (textOut: string) => {
 		const editor = vscode.window.activeTextEditor;
-		if (!editor) { return; }
+		if (!editor) { 
+			vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [replaceCurrentSelectionOrDocumentText]');
+			return; 
+		}
 		const document = editor.document;
 		const selection = editor.selection;
 		if (selection.isEmpty) {
@@ -40,6 +46,13 @@ export function activate(context: vscode.ExtensionContext) {
 	};
 
 
+
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// SCRIPTS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// Hello World
 	const helloWorld = vscode.commands.registerCommand('fao-html-scripts.helloWorld', () => {
@@ -51,11 +64,13 @@ export function activate(context: vscode.ExtensionContext) {
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// Strip Styles
 	const stripStyles = vscode.commands.registerCommand('fao-html-scripts.stripStyles', () => {
-		vscode.window.showInformationMessage('FAO Strip Styles');		
 		// Get the active text editor
 		const editor = vscode.window.activeTextEditor;
 		// If there's no active editor, do nothing
-		if (!editor) { return; }
+		if (!editor) { 
+			vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [stripStyles]');
+			return; 
+		}
 
 		// get text
 		let textIn = getCurrentSelectionOrDocumentText() || '';
@@ -71,5 +86,4 @@ export function activate(context: vscode.ExtensionContext) {
 
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
