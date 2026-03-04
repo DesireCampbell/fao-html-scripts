@@ -19,21 +19,54 @@
     "commands": [
       {
         "command": "fao-html-scripts.helloWorld",
-        "title": "Hello World"
+        "title": "FAO Hello World"
       },
       {
         "command": "fao-html-scripts.pasteAsHTML",
-        "title": "Paste as HTML"
+        "title": "FAO Paste as HTML"
       },
       {
         "command": "fao-html-scripts.stripStyles",
-        "title": "Strip Styles"
+        "title": "FAO Strip Styles"
       },
       {
         "command": "fao-html-scripts.formatCharts",
-        "title": "Format Charts"
+        "title": "FAO Format Charts"
       }
-    ]
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "fao-html-scripts.pasteAsHTML",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "fao-html-scripts.stripStyles",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "fao-html-scripts.formatCharts",
+          "when": "editorTextFocus"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "fao-html-scripts",
+          "title": "FAO HTML Scripts",
+          "icon": "resources/icon.png"
+        }
+      ]
+    },
+    "views": {
+      "fao-html-scripts": [
+        {
+          "id": "fao-html-scripts-view",
+          "name": "FAO HTML Scripts"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
