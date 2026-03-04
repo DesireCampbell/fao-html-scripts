@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 export function activate(context: vscode.ExtensionContext) {
 	// console.log('fao-html-scripts is now active.');
 
+
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// HELPER FUNCTIONS  - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -329,7 +330,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 	const pasteAsHTML = vscode.commands.registerCommand('fao-html-scripts.pasteAsHTML', () => {
-		vscode.window.showInformationMessage('FAO Paste as HTML is not yet implemented.');
+		// vscode.window.showInformationMessage('FAO Paste as HTML is not yet implemented.');
 		vscode.commands.executeCommand('editor.action.pasteAs', { 'kind': 'html', 'id': 'html' });
 	});
 	context.subscriptions.push(pasteAsHTML);
