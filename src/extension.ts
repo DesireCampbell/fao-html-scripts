@@ -47,6 +47,73 @@ export function activate(context: vscode.ExtensionContext) {
 	};
 
 
+	const formatAsString = (textIn: string) => {
+		// vscode.window.showInformationMessage('FAO Format as String is not yet implemented.');
+		let textOut = textIn;
+		// all whitespace (including newlines) to single spaces
+		textOut = textOut.replace(/\s+/gm, ' ');
+		// Remove leading/trailing whitespace
+		textOut = textOut.trim();
+		return textOut;
+	};
+
+
+	const formatAsPretty = (textIn: string) => {
+		// vscode.window.showInformationMessage('FAO Format as Pretty is not yet implemented.');
+		let textOut = textIn;
+		
+		const newlineBeforeTags = [
+			'p',
+			'hr',
+			'img',
+			'div',
+			'figure','figcaption',
+			'table', 'tr', 'td', 'th', 'caption', 'thead', 'tbody', 'tfoot',
+			'ul', 'ol', 'dl', 'li', 'dt', 'dd',
+			'h1','h2','h3','h4','h5','h6',
+		];
+		newlineBeforeTags.forEach(tag => {
+			const rOpenTag = new RegExp(`<${tag}[\\s>]`, 'gi');
+			textOut = textOut.replace(rOpenTag, '\n$&');
+			// const rCloseTag = new RegExp(`</${tag}>`, 'gi');
+			// textOut = textOut.replace(rCloseTag, '\n$&');
+		});
+
+
+		// indentation for nested tags
+		const indentTags = [
+			'table', 'tr', 'td', 'th',
+			'ul', 'ol', 'dl', 'li', 'dt', 'dd',
+		];
+		let indentLevel = 0;
+		indentTags.forEach(tag => {
+			const rOpenTag = new RegExp(`<${tag}[^>]*>`, 'gi');
+			textOut = textOut.replace(rOpenTag, match => {
+				const indentedMatch = '  '.repeat(indentLevel) + match;
+				indentLevel++;
+				return indentedMatch;
+			});
+			const rCloseTag = new RegExp(`</${tag}>`, 'gi');
+			textOut = textOut.replace(rCloseTag, match => {
+				indentLevel = Math.max(indentLevel - 1, 0);
+				return '  '.repeat(indentLevel) + match;
+			});
+		});
+
+
+		// extra newlines
+		const moreNewlinesBeforeTags = [
+			'h1','h2','h3','h4','h5','h6',
+		];
+		textOut = textOut.replace(/\n+/g, '\n');
+
+		
+		return textOut;
+	};
+
+
+
+
 
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -60,6 +127,19 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Hello World from FAO HTML Scripts!');
 	});
 	context.subscriptions.push(helloWorld);
+
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// Paste as HTML
+	// This function uses the built in paste as HTML command, which captures the 
+	// HTML from the clipboard and pastes it into the document. 
+	const pasteAsHTML = vscode.commands.registerCommand('fao-html-scripts.pasteAsHTML', () => {
+		// vscode.window.showInformationMessage('FAO Paste as HTML is not yet implemented.');
+		vscode.commands.executeCommand('editor.action.pasteAs', { 'kind': 'html', 'id': 'html' });
+	});
+	context.subscriptions.push(pasteAsHTML);
+
+
 
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -82,7 +162,9 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showInformationMessage('Error: No text found in the current selection or document. [stripStyles]');
 			return;
 		}
-		let textOut = textIn;
+		let textOut = formatAsString(textIn);
+
+
 
 
 		// START SCRIPT - - - - - - - - - - - - - - - - -
@@ -275,13 +357,48 @@ export function activate(context: vscode.ExtensionContext) {
 			'w:wrap',
 		];
 		removeAttributes.forEach(attr => {
-			if (!keepAttributes.includes(attr)) {
-				const regex = new RegExp(`\\s${attr}\\s*=\\s*"[^"]*"`, 'gi');
-				textOut = textOut.replace(regex, '');
-			}
+			const rQuotedAttr = new RegExp(`\\s${attr}\\s*=\\s*"[^"]*"`, 'gi');
+			textOut = textOut.replace(rQuotedAttr, '');
+			const rUnQuotedAttr = new RegExp(`\\s${attr}\\s*=\\s*[^\\s>]*([\\s>])`, 'gi');
+			textOut = textOut.replace(rUnQuotedAttr, '$1');
 		});
 
 
+		// remove attributes only if empty
+		const emptyAttributes = [
+			'id',
+			'href',
+			'id',
+			'name',
+			'target',
+		];
+		emptyAttributes.forEach(attr => {
+			const rEmptyAttr = new RegExp(`\\s${attr}\\s*=\\s*""`, 'gi');
+			textOut = textOut.replace(rEmptyAttr, '');
+		});
+
+		// remove boolean attributes
+		const booleanAttributes = [
+			'hidden',
+			'disabled',
+			'reversed',
+			'nowrap',
+		];
+		booleanAttributes.forEach(attr => {
+			const rBooleanAttr = new RegExp(`\\s${attr}(\\s|>)`, 'gi');
+			textOut = textOut.replace(rBooleanAttr, '$1');
+		});
+
+
+		// remove anchors with no href, leave content
+		const rUnlinkedA = new RegExp('<a(?![^>]*\\shref=)[^>]*>([\\s\\S]*?)<\\/a>', 'gi');
+		textOut = textOut.replace(rUnlinkedA, '$1');
+
+
+
+		// replace data images with placeholder
+		const rDataImages = new RegExp('src="data:image[^"]*"', 'gi');
+		textOut = textOut.replace(rDataImages, 'src="/wp-content/uploads/report/slug/en/fig1.png"');
 
 		// remove style tags and their content
 		textOut = textOut.replace(/<style[\s\S]*?<\/style>/gi, '');
@@ -291,16 +408,77 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 
+		// clean up extra spaces inside tags
+		textOut = textOut.replace(/<\s*([^>]*?)\s*>/gi, '<$1>');
+
 
 		// END SCRIPT - - - - - - - - - - - - - - - - - -
 
 
 		// Finally, replace text
-		replaceCurrentSelectionOrDocumentText(textOut);
+		replaceCurrentSelectionOrDocumentText(formatAsPretty(textOut));
 	});
 	context.subscriptions.push(stripStyles);
 
 
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// Fix lists
+	const fixLists = vscode.commands.registerCommand('fao-html-scripts.fixLists', () => {
+		vscode.window.showInformationMessage('SCRIPT: fixLists');
+	});
+	context.subscriptions.push(fixLists);
+	
+	
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// format charts
+	const formatCharts = vscode.commands.registerCommand('fao-html-scripts.formatCharts', () => {
+		vscode.window.showInformationMessage('SCRIPT: formatCharts');
+	});
+	context.subscriptions.push(formatCharts);
+	
+	
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// format tables
+	const formatTables = vscode.commands.registerCommand('fao-html-scripts.formatTables', () => {
+		vscode.window.showInformationMessage('SCRIPT: formatTables');
+	});
+	context.subscriptions.push(formatTables);
+	
+	
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// footnote ref
+	const footnoteRef = vscode.commands.registerCommand('fao-html-scripts.footnoteRef', () => {
+		vscode.window.showInformationMessage('SCRIPT: footnoteRef');
+	});
+	context.subscriptions.push(footnoteRef);
+	
+	
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// target blank
+	const targetBlank = vscode.commands.registerCommand('fao-html-scripts.targetBlank', () => {
+		vscode.window.showInformationMessage('SCRIPT: targetBlank');
+	});
+	context.subscriptions.push(targetBlank);
+	
+	
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// fix headings
+	const fixHeadings = vscode.commands.registerCommand('fao-html-scripts.fixHeadings', () => {
+		vscode.window.showInformationMessage('SCRIPT: fixHeadings');
+	});
+	context.subscriptions.push(fixHeadings);
+	
+	
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// en to fr
+	const englishToFrench = vscode.commands.registerCommand('fao-html-scripts.englishToFrench', () => {
+		vscode.window.showInformationMessage('SCRIPT: englishToFrench');
+	});
+	context.subscriptions.push(englishToFrench);
+
+
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// Normalize Format
 	// This function formats HTML in a consistent way for easier manipulation by 
 	// other scrips. No empty lines, every tag on a new line
@@ -316,36 +494,10 @@ export function activate(context: vscode.ExtensionContext) {
 		// remove XML style self closing tags (e.g. <br />) and replace with HTML style (e.g. <br>)
 		textOut = textOut.replace(/<(\w+)([^>]*)\/>/g, '<$1$2>');
 
-		// all whitespace (including newlines) to single spaces
-		textOut = textOut.replace(/\s+/g, ' ');
-		// every tag on a new line
-		textOut = textOut.replace(/>\s*</g, '>\n<');
-		// Remove leading/trailing whitespace
-		textOut = textOut.trim();
 		// Finally, replace text
 		replaceCurrentSelectionOrDocumentText(textOut);
 	});
 	context.subscriptions.push(normalizeFormat);
-
-
-
-	const pasteAsHTML = vscode.commands.registerCommand('fao-html-scripts.pasteAsHTML', () => {
-		// vscode.window.showInformationMessage('FAO Paste as HTML is not yet implemented.');
-		vscode.commands.executeCommand('editor.action.pasteAs', { 'kind': 'html', 'id': 'html' });
-	});
-	context.subscriptions.push(pasteAsHTML);
-
-
-
-	const formatCharts = vscode.commands.registerCommand('fao-html-scripts.formatCharts', () => {
-		vscode.window.showInformationMessage('FAO Format Charts is not yet implemented.');
-	});
-	context.subscriptions.push(formatCharts);	
-
-
-
-
-
 
 }
 

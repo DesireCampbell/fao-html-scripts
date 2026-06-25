@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/DesireCampbell/fao-html-scripts.git"
   },
-  "version": "0.0.1",
+  "version": "0.1.1",
   "engines": {
     "vscode": "^1.109.0"
   },
@@ -62,7 +62,7 @@
     "viewsWelcome": [
 			{
 				"view": "fao-html-scripts-view",
-				"contents": "You can have paragraphs of text here. You can have [links](https://code.visualstudio.com) to external sources or [internal commands](command:welcome-view-content-sample.hello).\nUse new lines to have new paragraphs.\nPlace a link alone in a paragraph to make it a button\n[Hello](command:welcome-view-content-sample.hello)\n You can also render [codicons](https://microsoft.github.io/vscode-codicons/dist/codicon.html) using the $(...) syntax like: $(vscode) $(heart) $(github)\nAdd a little $(sparkle) to your welcome views!\n\n\n[$(clippy) Paste as HTML](command:fao-html-scripts.pasteAsHTML)\n\n[Strip Styles](command:fao-html-scripts.stripStyles)\n\n[Format Charts](command:fao-html-scripts.formatCharts)"
+				"contents": "FAO HTML helper \n[$(clippy) Paste as HTML](command:fao-html-scripts.pasteAsHTML)\n[$(clear-all) Strip Styles](command:fao-html-scripts.stripStyles)\n[$(list-ordered) Fix Lists](command:fao-html-scripts.fixLists)\n[$(graph-line) Format Charts](command:fao-html-scripts.formatCharts)\n[$(table) Format Tables](command:fao-html-scripts.formatTables)\n[$(quote) Footnote Ref](command:fao-html-scripts.footnoteRef)\n[$(open-in-window) Target Blank](command:fao-html-scripts.targetBlank)\n[$(text-size) Fix Headings](command:fao-html-scripts.fixHeadings)\n[$(comment) English To French](command:fao-html-scripts.englishToFrench) \n\n"
 			}
 		],
     "views": {
