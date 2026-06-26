@@ -18,35 +18,109 @@
   "contributes": {
     "commands": [
       {
-        "command": "fao-html-scripts.helloWorld",
-        "title": "FAO Hello World"
-      },
-      {
         "command": "fao-html-scripts.pasteAsHTML",
-        "title": "FAO Paste as HTML"
+        "title": "Paste as HTML"
       },
       {
         "command": "fao-html-scripts.stripStyles",
-        "title": "FAO Strip Styles"
+        "title": "Strip Styles"
+      },
+      {
+        "command": "fao-html-scripts.fixLists",
+        "title": "Fix Lists"
       },
       {
         "command": "fao-html-scripts.formatCharts",
-        "title": "FAO Format Charts"
+        "title": "Format Charts"
+      },
+      {
+        "command": "fao-html-scripts.formatTables",
+        "title": "Format Tables"
+      },
+      {
+        "command": "fao-html-scripts.footnoteRef",
+        "title": "Footnote Ref"
+      },
+      {
+        "command": "fao-html-scripts.targetBlank",
+        "title": "Target Blank"
+      },
+      {
+        "command": "fao-html-scripts.fixHeadings",
+        "title": "Fix Headings"
+      },
+      {
+        "command": "fao-html-scripts.englishToFrench",
+        "title": "English To French" 
+      },
+      {
+        "command": "fao-html-scripts.renameFigFiles",
+        "title": "Rename fig files" 
+      }
+    ],
+    "submenus": [
+      {
+        "id": "fao-html-scripts.submenu",
+        "label": "FAO HTML Scripts"
       }
     ],
     "menus": {
       "editor/context": [
         {
+          "submenu": "fao-html-scripts.submenu",
+          "group": "fao-html-scripts"
+        }
+      ],
+      "fao-html-scripts.submenu": [
+        {
           "command": "fao-html-scripts.pasteAsHTML",
-          "when": "editorTextFocus"
+          "when": "editorTextFocus",
+          "group": "fao-html-scripts@1"
         },
         {
           "command": "fao-html-scripts.stripStyles",
-          "when": "editorTextFocus"
+          "when": "editorTextFocus",
+          "group": "fao-html-scripts@2"
+        },
+        {
+          "command": "fao-html-scripts.fixLists",
+          "when": "editorTextFocus",
+          "group": "fao-html-scripts@3"
         },
         {
           "command": "fao-html-scripts.formatCharts",
-          "when": "editorTextFocus"
+          "when": "editorTextFocus",
+          "group": "fao-html-scripts@4"
+        },
+        {
+          "command": "fao-html-scripts.formatTables",
+          "when": "editorTextFocus",
+          "group": "fao-html-scripts@5"
+        },
+        {
+          "command": "fao-html-scripts.footnoteRef",
+          "when": "editorTextFocus",
+          "group": "fao-html-scripts@6"
+        },
+        {
+          "command": "fao-html-scripts.targetBlank",
+          "when": "editorTextFocus",
+          "group": "fao-html-scripts@7"
+        },
+        {
+          "command": "fao-html-scripts.fixHeadings",
+          "when": "editorTextFocus",
+          "group": "fao-html-scripts@8"
+        },
+        {
+          "command": "fao-html-scripts.englishToFrench",
+          "when": "editorTextFocus",
+          "group": "fao-html-scripts@9"
+        },
+        {
+          "command": "fao-html-scripts.renameFigFiles",
+          "when": "editorTextFocus",
+          "group": "fao-html-scripts@10"
         }
       ]
     },
@@ -62,7 +136,7 @@
     "viewsWelcome": [
 			{
 				"view": "fao-html-scripts-view",
-				"contents": "FAO HTML helper \n[$(clippy) Paste as HTML](command:fao-html-scripts.pasteAsHTML)\n[$(clear-all) Strip Styles](command:fao-html-scripts.stripStyles)\n[$(list-ordered) Fix Lists](command:fao-html-scripts.fixLists)\n[$(graph-line) Format Charts](command:fao-html-scripts.formatCharts)\n[$(table) Format Tables](command:fao-html-scripts.formatTables)\n[$(quote) Footnote Ref](command:fao-html-scripts.footnoteRef)\n[$(open-in-window) Target Blank](command:fao-html-scripts.targetBlank)\n[$(text-size) Fix Headings](command:fao-html-scripts.fixHeadings)\n[$(comment) English To French](command:fao-html-scripts.englishToFrench) \n\n"
+				"contents": "FAO HTML helper \n[$(clippy) Paste as HTML](command:fao-html-scripts.pasteAsHTML)\n[$(clear-all) Strip Styles](command:fao-html-scripts.stripStyles)\n[$(list-ordered) Fix Lists](command:fao-html-scripts.fixLists)\n[$(graph-line) Format Charts](command:fao-html-scripts.formatCharts)\n[$(table) Format Tables](command:fao-html-scripts.formatTables)\n[$(quote) Footnote Ref](command:fao-html-scripts.footnoteRef)\n[$(open-in-window) Target Blank](command:fao-html-scripts.targetBlank)\n[$(text-size) Fix Headings](command:fao-html-scripts.fixHeadings)\n[$(comment) English To French](command:fao-html-scripts.englishToFrench) \n[$(rename) Rename fig files](command:fao-html-scripts.renameFigFiles) \n\n"
 			}
 		],
     "views": {

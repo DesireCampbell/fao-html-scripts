@@ -140,6 +140,26 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(pasteAsHTML);
 
 
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// Normalize Format
+	// This function formats HTML in a consistent way for easier manipulation by 
+	// other scrips. No empty lines, every tag on a new line
+	const normalizeFormat = vscode.commands.registerCommand('fao-html-scripts.normalizeFormat', (textIn: string) => {
+		let textOut = textIn;
+		// tags should not have whitespace immediatley after opening tag, or before closing tag
+		textOut = textOut.replace(/(\s)<([^>\/]+)>(\s+)/g, ' <$2>'); // outside <tag> inside
+		textOut = textOut.replace(/([^\s])<([^>\/]+)>(\s+)/g, '$1 <$2>'); // outside<tag> inside
+
+		// attributes should be formatted as attr="value" with no whitespace around the equals sign
+		textOut = textOut.replace(/(\w+)\s*=\s*"([^"]*)"/g, '$1="$2"');
+
+		// remove XML style self closing tags (e.g. <br />) and replace with HTML style (e.g. <br>)
+		textOut = textOut.replace(/<(\w+)([^>]*)\/>/g, '<$1$2>');
+
+		// Finally, replace text
+		replaceCurrentSelectionOrDocumentText(textOut);
+	});
+	context.subscriptions.push(normalizeFormat);
 
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -155,7 +175,6 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [stripStyles]');
 			return; 
 		}
-
 		// get text from selection or document
 		const textIn = getCurrentSelectionOrDocumentText() || '';
 		if (textIn.trim() === '') {
@@ -164,10 +183,6 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		let textOut = formatAsString(textIn);
 
-
-
-
-		// START SCRIPT - - - - - - - - - - - - - - - - -
 		// remove comments
 		const rComments = new RegExp('<!--[\\s\\S]*?-->', 'gim');
 		textOut = textOut.replace(rComments, '');
@@ -182,7 +197,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 		// collapse whitesapce (including newlines) to single spaces
 		textOut = textOut.replace(/ +/g, ' ');
-
 
 		// remove cruft strings
 		const cruftStrings = [
@@ -201,7 +215,6 @@ export function activate(context: vscode.ExtensionContext) {
 			textOut = textOut.replace(regex, '');
 		});
 
-
 		// remove elements and all their content
 		const elementsWithContent = [
 			'head',
@@ -215,7 +228,6 @@ export function activate(context: vscode.ExtensionContext) {
 			const regex = new RegExp(`<${element}[^>]*>[\\s\\S]*?<\\/${element}>`, 'gi');
 			textOut = textOut.replace(regex, '');
 		});
-
 
 		// remove elements, leave content
 		const unwrapElements = [
@@ -260,7 +272,6 @@ export function activate(context: vscode.ExtensionContext) {
 			textOut = textOut.replace(regex, '');
 		});
 
-
 		// remove elements if empty
 		const emptyElements = [
 			'a',
@@ -296,7 +307,6 @@ export function activate(context: vscode.ExtensionContext) {
 			const rCloseOpen = new RegExp(`</${tag}><${tag}>`, 'gi'); // no space separation
 			textOut = textOut.replace(rCloseOpen, '');
 		});
-
 
 		// normalize attribute quotes to double quotes
 		const rSingleQuotes = new RegExp(" (\\w+)\\s*=\\s*'([^']*)'", 'gi');
@@ -363,7 +373,6 @@ export function activate(context: vscode.ExtensionContext) {
 			textOut = textOut.replace(rUnQuotedAttr, '$1');
 		});
 
-
 		// remove attributes only if empty
 		const emptyAttributes = [
 			'id',
@@ -389,12 +398,9 @@ export function activate(context: vscode.ExtensionContext) {
 			textOut = textOut.replace(rBooleanAttr, '$1');
 		});
 
-
 		// remove anchors with no href, leave content
 		const rUnlinkedA = new RegExp('<a(?![^>]*\\shref=)[^>]*>([\\s\\S]*?)<\\/a>', 'gi');
 		textOut = textOut.replace(rUnlinkedA, '$1');
-
-
 
 		// replace data images with placeholder
 		const rDataImages = new RegExp('src="data:image[^"]*"', 'gi');
@@ -406,14 +412,8 @@ export function activate(context: vscode.ExtensionContext) {
 		// remove inline styles
 		// textOut = textOut.replace(/ style="[^"]*"/gi, '');
 
-
-
 		// clean up extra spaces inside tags
 		textOut = textOut.replace(/<\s*([^>]*?)\s*>/gi, '<$1>');
-
-
-		// END SCRIPT - - - - - - - - - - - - - - - - - -
-
 
 		// Finally, replace text
 		replaceCurrentSelectionOrDocumentText(formatAsPretty(textOut));
@@ -424,7 +424,32 @@ export function activate(context: vscode.ExtensionContext) {
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// Fix lists
 	const fixLists = vscode.commands.registerCommand('fao-html-scripts.fixLists', () => {
-		vscode.window.showInformationMessage('SCRIPT: fixLists');
+		// vscode.window.showInformationMessage('SCRIPT: fixLists');
+		
+		// Get the active text editor
+		const editor = vscode.window.activeTextEditor;
+		// If there's no active editor, do nothing
+		if (!editor) { 
+			vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [fixLists]');
+			return; 
+		}
+		// get text from selection or document
+		const textIn = getCurrentSelectionOrDocumentText() || '';
+		if (textIn.trim() === '') {
+			vscode.window.showInformationMessage('Error: No text found in the current selection or document. [fixLists]');
+			return;
+		}
+		let textOut = formatAsString(textIn);
+
+		const rLists = new RegExp(`<p>[·•o§][\s\S]*?</p>(?!\s*<p>[·•o§])`, 'gi');
+		const matchedLists = textOut.matchAll(rLists);
+		// matchedLists.forEach(match => {
+			
+		// });
+
+
+		// Finally, replace text
+		replaceCurrentSelectionOrDocumentText(formatAsPretty(textOut));
 	});
 	context.subscriptions.push(fixLists);
 	
@@ -476,29 +501,17 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(englishToFrench);
 
-
-
+	
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	// Normalize Format
-	// This function formats HTML in a consistent way for easier manipulation by 
-	// other scrips. No empty lines, every tag on a new line
-	const normalizeFormat = vscode.commands.registerCommand('fao-html-scripts.normalizeFormat', (textIn: string) => {
-		let textOut = textIn;
-		// tags should not have whitespace immediatley after opening tag, or before closing tag
-		textOut = textOut.replace(/(\s)<([^>\/]+)>(\s+)/g, ' <$2>'); // outside <tag> inside
-		textOut = textOut.replace(/([^\s])<([^>\/]+)>(\s+)/g, '$1 <$2>'); // outside<tag> inside
-
-		// attributes should be formatted as attr="value" with no whitespace around the equals sign
-		textOut = textOut.replace(/(\w+)\s*=\s*"([^"]*)"/g, '$1="$2"');
-
-		// remove XML style self closing tags (e.g. <br />) and replace with HTML style (e.g. <br>)
-		textOut = textOut.replace(/<(\w+)([^>]*)\/>/g, '<$1$2>');
-
-		// Finally, replace text
-		replaceCurrentSelectionOrDocumentText(textOut);
+	// Rename fig files
+	// This script expects the fig files to be in either a subfolder named "en" 
+	// or "fr" and will attempt to rename the image files to match the filenames 
+	// present in the HTML.
+	// https://www.eliostruyf.com/devhack-rename-file-vscode-extension/
+	const renameFigFiles = vscode.commands.registerCommand('fao-html-scripts.renameFigFiles', () => {
+		vscode.window.showInformationMessage('SCRIPT: renameFigFiles');
 	});
-	context.subscriptions.push(normalizeFormat);
-
+	context.subscriptions.push(renameFigFiles);
 }
 
 export function deactivate() {}
