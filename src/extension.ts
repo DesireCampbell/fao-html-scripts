@@ -3,6 +3,12 @@ import * as vscode from 'vscode';
 export function activate(context: vscode.ExtensionContext) {
 	// console.log('fao-html-scripts is now active.');
 
+	//Create output channel
+	let faodebug = vscode.window.createOutputChannel("FAO debug");
+	faodebug.show();
+	//Write to output.
+	faodebug.appendLine("I am two banana.");
+
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// HELPER FUNCTIONS  - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -66,10 +72,11 @@ export function activate(context: vscode.ExtensionContext) {
 			'p',
 			'hr',
 			'img',
-			'div',
-			'figure','figcaption',
+			'div','/div',
+			'figure', '/figure', 'figcaption', '/figcaption',
 			'table', 'tr', 'td', 'th', 'caption', 'thead', 'tbody', 'tfoot',
-			'ul', 'ol', 'dl', 'li', 'dt', 'dd',
+			'/table', '/tr', '/thead', '/tbody', '/tfoot',
+			'ul', '/ul', 'ol', '/ol', 'dl', '/dl', 'li', 'dt', 'dd',
 			'h1','h2','h3','h4','h5','h6',
 		];
 		newlineBeforeTags.forEach(tag => {
@@ -340,6 +347,8 @@ export function activate(context: vscode.ExtensionContext) {
 			'hspace',
 			'name',
 			'nowrap',
+			'onmouseover',
+			'onmouseout',
 			'size',
 			'style',
 			'tabindex',
@@ -425,6 +434,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Fix lists
 	const fixLists = vscode.commands.registerCommand('fao-html-scripts.fixLists', () => {
 		// vscode.window.showInformationMessage('SCRIPT: fixLists');
+		faodebug.appendLine('SCRIPT: fixLists');
 		
 		// Get the active text editor
 		const editor = vscode.window.activeTextEditor;
@@ -439,17 +449,41 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showInformationMessage('Error: No text found in the current selection or document. [fixLists]');
 			return;
 		}
-		let textOut = formatAsString(textIn);
+		let textOut = textIn;
+		// textOut = formatAsString(textIn);
 
-		const rLists = new RegExp(`<p>[·•o§][\s\S]*?</p>(?!\s*<p>[·•o§])`, 'gi');
-		const matchedLists = textOut.matchAll(rLists);
-		// matchedLists.forEach(match => {
-			
-		// });
+		const rLists = /<p>[·•o§][\s\S]*?<\/p>(?!\s*<p>[·•o§])/gi;
+		const matchedLists = [...textOut.matchAll(rLists)];
+		// let tmp = '';
+		// let i = 0;
+		faodebug.appendLine(`found ${matchedLists.length} lists`);
+		matchedLists.forEach(match => {
+			faodebug.appendLine(match[0]);
+			// move inner-inner lists to previous list item [§]
+			let newList = match[0];
+			newList = newList.replace(
+				/<\/p>\s*(<p>§[\s\S]*?<\/p>)(?!\s*<p>§)/gi,
+				'<ul>$1</ul></p>'
+			);
+			// # move inner lists into previous list item [o]
+			newList = newList.replace(
+				/<\/p>\s*(<p>o[\s\S]*?<\/p>)(?!\s*<p>o)/gi,
+				'<ul>$1</ul></p>'
+			);
+			// # remove all bullet characters
+			newList = newList.replace(/<p>[·•o§]\s/gi,'<p>');
+			// # change all Ps to LIs
+			newList = newList.replace(/<p>/gi, '<li>');
+			newList = newList.replace(/<\/p>/gi, '</li>');
+			// # wrap whole list in UL
+			newList = '\n\n<ul>\n' + newList + '\n</ul>\n\n';
+			// # replace in filetext
+			textOut = textOut.replace(match[0], newList);
+		});
 
 
 		// Finally, replace text
-		replaceCurrentSelectionOrDocumentText(formatAsPretty(textOut));
+		replaceCurrentSelectionOrDocumentText(textOut);
 	});
 	context.subscriptions.push(fixLists);
 	
