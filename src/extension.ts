@@ -1212,6 +1212,57 @@ function getClassedTableHtml(table:string = '') {
   // footnote ref
   const footnoteRef = vscode.commands.registerCommand('fao-html-scripts.footnoteRef', () => {
     faodebug.appendLine('SCRIPT: footnoteRef');
+
+    // Get the active text editor
+    const editor = vscode.window.activeTextEditor;
+    // If there's no active editor, do nothing
+    if (!editor) { 
+      vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [footnoteRef]');
+      return; 
+    }
+    // get text from selection or document
+    const textIn = getCurrentSelectionOrDocumentText() || '';
+    if (textIn.trim() === '') {
+      vscode.window.showInformationMessage('Error: No text found in the current selection or document. [footnoteRef]');
+      return;
+    }
+    let textOut = textIn;
+    textOut = formatAsNormal(textIn);
+
+    // get all ftn links
+    let ftnMatches = [...textOut.matchAll(/<a href="#_ftn(\d+)".*?>/gim)];
+    faodebug.appendLine(ftnMatches.length + ' footnote links found');
+    ftnMatches.forEach(ftnMatch => {
+      let ftnString:string = ftnMatch[0];
+      // get ref num
+      let num:string = ftnMatch[1];
+      // remove any existing id
+      ftnString = ftnString.replace(/ id\s*=\s*"(.*)"/gim,'');
+      // add correct id
+      ftnString = ftnString.replace(/>/gim,` id="_ftnref${num}">`);
+      faodebug.appendLine(ftnMatch[0] + ' -> ' + ftnString);
+
+      textOut = textOut.replace(ftnMatch[0],ftnString);
+    });
+
+    // get all ftnref links
+    let ftnrefMatches = [...textOut.matchAll(/<a href="#_ftnref(\d+)".*?>/gim)];
+    faodebug.appendLine(ftnrefMatches.length + ' footnote links found');
+    ftnrefMatches.forEach(ftnrefMatch => {
+      let ftnrefString:string = ftnrefMatch[0];
+      // get ref num
+      let num:string = ftnrefMatch[1];
+      // remove any existing id
+      ftnrefString = ftnrefString.replace(/ id\s*=\s*"(.*)"/gim,'');
+      // add correct id
+      ftnrefString = ftnrefString.replace(/>/gim,` id="_ftn${num}">`);
+      faodebug.appendLine(ftnrefMatch[0] + ' -> ' + ftnrefString);
+
+      textOut = textOut.replace(ftnrefMatch[0],ftnrefString);
+    });
+
+    // Finally, replace text
+    replaceCurrentSelectionOrDocumentText(textOut);
   });
   context.subscriptions.push(footnoteRef);
   
@@ -1256,6 +1307,22 @@ function getClassedTableHtml(table:string = '') {
   // target blank
   const targetBlank = vscode.commands.registerCommand('fao-html-scripts.targetBlank', () => {
     faodebug.appendLine('SCRIPT: targetBlank');
+
+    // Get the active text editor
+    const editor = vscode.window.activeTextEditor;
+    // If there's no active editor, do nothing
+    if (!editor) { 
+      vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [targetBlank]');
+      return; 
+    }
+    // get text from selection or document
+    const textIn = getCurrentSelectionOrDocumentText() || '';
+    if (textIn.trim() === '') {
+      vscode.window.showInformationMessage('Error: No text found in the current selection or document. [targetBlank]');
+      return;
+    }
+    let textOut = textIn;
+    // textOut = formatAsString(textIn);
   });
   context.subscriptions.push(targetBlank);
   
@@ -1300,6 +1367,22 @@ function getClassedTableHtml(table:string = '') {
   // fix headings
   const fixHeadings = vscode.commands.registerCommand('fao-html-scripts.fixHeadings', () => {
     faodebug.appendLine('SCRIPT: fixHeadings');
+
+    // Get the active text editor
+    const editor = vscode.window.activeTextEditor;
+    // If there's no active editor, do nothing
+    if (!editor) { 
+      vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [fixHeadings]');
+      return; 
+    }
+    // get text from selection or document
+    const textIn = getCurrentSelectionOrDocumentText() || '';
+    if (textIn.trim() === '') {
+      vscode.window.showInformationMessage('Error: No text found in the current selection or document. [fixHeadings]');
+      return;
+    }
+    let textOut = textIn;
+    // textOut = formatAsString(textIn);
   });
   context.subscriptions.push(fixHeadings);
   
@@ -1347,6 +1430,22 @@ function getClassedTableHtml(table:string = '') {
     // replace template strings with French equivalents
     // add nbsp after certain punctuation marks
     // add nbsp as thousands separator in numbers
+
+    // Get the active text editor
+    const editor = vscode.window.activeTextEditor;
+    // If there's no active editor, do nothing
+    if (!editor) { 
+      vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [englishToFrench]');
+      return; 
+    }
+    // get text from selection or document
+    const textIn = getCurrentSelectionOrDocumentText() || '';
+    if (textIn.trim() === '') {
+      vscode.window.showInformationMessage('Error: No text found in the current selection or document. [englishToFrench]');
+      return;
+    }
+    let textOut = textIn;
+    // textOut = formatAsString(textIn);
   });
   context.subscriptions.push(englishToFrench);
 
@@ -1395,6 +1494,22 @@ function getClassedTableHtml(table:string = '') {
   // https://www.eliostruyf.com/devhack-rename-file-vscode-extension/
   const renameFigFiles = vscode.commands.registerCommand('fao-html-scripts.renameFigFiles', () => {
     faodebug.appendLine('SCRIPT: renameFigFiles');
+
+    // Get the active text editor
+    const editor = vscode.window.activeTextEditor;
+    // If there's no active editor, do nothing
+    if (!editor) { 
+      vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [renameFigFiles]');
+      return; 
+    }
+    // get text from selection or document
+    const textIn = getCurrentSelectionOrDocumentText() || '';
+    if (textIn.trim() === '') {
+      vscode.window.showInformationMessage('Error: No text found in the current selection or document. [renameFigFiles]');
+      return;
+    }
+    let textOut = textIn;
+    // textOut = formatAsString(textIn);
   });
   context.subscriptions.push(renameFigFiles);
 }
