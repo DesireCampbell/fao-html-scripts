@@ -413,7 +413,8 @@ export function activate(context: vscode.ExtensionContext) {
   // only P, B, STRONG, I, EM, IMG, A, TABLE (and associated tags); leaving 
   // the content ready to be modified by other scripts.
   const stripStyles = vscode.commands.registerCommand('fao-html-scripts.stripStyles', () => {
-    consoleLog("fao-html-scripts.stripStyles");
+    faodebug.appendLine('SCRIPT: stripStyles');
+    // consoleLog("fao-html-scripts.stripStyles");
     // // Get the active text editor
     // const editor = vscode.window.activeTextEditor;
     // // If there's no active editor, do nothing
@@ -736,8 +737,10 @@ export function activate(context: vscode.ExtensionContext) {
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // Fix lists
   const fixLists = vscode.commands.registerCommand('fao-html-scripts.fixLists', () => {
+    faodebug.appendLine('SCRIPT: fixLists');
     // vscode.window.showInformationMessage('SCRIPT: fixLists');
-    consoleLog('SCRIPT: fixLists');
+    // consoleLog('SCRIPT: fixLists');
+    let numFound = 0;
     
     // Get the active text editor
     const editor = vscode.window.activeTextEditor;
@@ -759,7 +762,7 @@ export function activate(context: vscode.ExtensionContext) {
     const matchedLists = [...textOut.matchAll(rLists)];
     // let tmp = '';
     // let i = 0;
-    // faodebug.appendLine(`found ${matchedLists.length} lists`);
+    numFound += matchedLists.length;
     matchedLists.forEach(match => {
       faodebug.appendLine(match[0]);
       // move inner-inner lists to previous list item [§]
@@ -787,6 +790,9 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Finally, replace text
     replaceCurrentSelectionOrDocumentText(textOut);
+
+    // result message for user
+    consoleLog(`Fix Lists: ${numFound} lists found and fixed.`);
   });
   context.subscriptions.push(fixLists);
   
@@ -831,7 +837,9 @@ export function activate(context: vscode.ExtensionContext) {
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // format charts
   const formatCharts = vscode.commands.registerCommand('fao-html-scripts.formatCharts', () => {
-    consoleLog("fao-html-scripts.formatCharts");
+    faodebug.appendLine('SCRIPT: formatCharts');
+    // consoleLog("fao-html-scripts.formatCharts");
+    let numFound = 0;
     // Get the active text editor
     const editor = vscode.window.activeTextEditor;
     // If there's no active editor, do nothing
@@ -853,7 +861,8 @@ export function activate(context: vscode.ExtensionContext) {
     // [figure XX] and [title] and [y-axis label] in separate paragraphs
     const rCharts5 = /<p>\s*(?:<strong>)?Figure .*?\s<p>.*?<\/p>\s*<p>.*?<\/p>\s*<img [\s\S]*?<p>Sources?.*?<\/p>/gim;
     const matchedCharts5 = [...textOut.matchAll(rCharts5)];
-    consoleLog("found " + matchedCharts5.length + " charts in format 5");
+    numFound += matchedCharts5.length;
+    // consoleLog("found " + matchedCharts5.length + " charts in format 5");
 
     matchedCharts5.forEach(match => {
       faodebug.appendLine(match[0]);
@@ -904,9 +913,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 
     // Finally, replace text
-    // replaceCurrentSelectionOrDocumentText(textOut);
-    // replaceCurrentSelectionOrDocumentText(formatAsNormal(textOut));
-    replaceCurrentSelectionOrDocumentText(formatAsPretty(textOut));
+    replaceCurrentSelectionOrDocumentText(textOut);
+
+    // result message for user
+    consoleLog(`Format Charts: ${numFound} charts found.`);
   });
   context.subscriptions.push(formatCharts);
   
@@ -986,6 +996,7 @@ ${noteBlock}<p class="source">${source}</p>
   // format tables
   const formatTables = vscode.commands.registerCommand('fao-html-scripts.formatTables', () => {
     faodebug.appendLine('SCRIPT: formatTables');
+    let numFound = 0;
 
     // Get the active text editor
     const editor = vscode.window.activeTextEditor;
@@ -1008,6 +1019,7 @@ ${noteBlock}<p class="source">${source}</p>
     // <p>Table ... <table ... <p>Source ... </p>
     const rTables1 = /<p>\s*(?:<strong>)?(?:Figure|Table|Chart).*?\n*\S*<table[\s\S]*?<p>Source.*?<\/p>/gim;
     const matchedTables1 = [...textOut.matchAll(rTables1)];
+    numFound += matchedTables1.length;
     faodebug.appendLine(matchedTables1.length + ' tables found in format 1');
     matchedTables1.forEach(match => {
       faodebug.appendLine(match[0]);
@@ -1020,6 +1032,7 @@ ${noteBlock}<p class="source">${source}</p>
     const rTables2 = /<p>\s*(?:<strong>)?(?:Figure|Table|Chart).*?\s*<p>.*?<\/p>\s*<table[\s\S]*?<p>Source.*?<\/p>/gim;
     const matchedTables2 = [...textOut.matchAll(rTables2)];
     faodebug.appendLine(matchedTables2.length + ' tables found in format 2');
+    numFound += matchedTables2.length;
     matchedTables2.forEach(tableMatch => {
       // faodebug.appendLine(tableMatch[0]);
       let textOld = tableMatch[0];
@@ -1073,6 +1086,7 @@ ${noteBlock}<p class="source">${source}</p>
     // alt text tables
     const rTables3 = /<\/summary>\s*<table[\s\S]*?<\/details>/gim;
     const matchedTables3 = [...textOut.matchAll(rTables3)];
+    numFound += matchedTables3.length;
     faodebug.appendLine(matchedTables3.length + ' tables found in format 3');
     matchedTables3.forEach(match => {
       faodebug.appendLine(match[0]);
@@ -1083,6 +1097,7 @@ ${noteBlock}<p class="source">${source}</p>
     // table with title as attribute
     const rTables4 = /<table table=[\s\S]*?<p>Source.*?<\/p>/gim;
     const matchedTables4 = [...textOut.matchAll(rTables4)];
+    numFound += matchedTables4.length;
     faodebug.appendLine(matchedTables4.length + ' tables found in format 4');
     matchedTables4.forEach(match => {
       faodebug.appendLine(match[0]);
@@ -1092,7 +1107,11 @@ ${noteBlock}<p class="source">${source}</p>
     // clean up tables
 
 
+    // Finally, replace text
     replaceCurrentSelectionOrDocumentText(textOut);
+
+    // result message for user
+    consoleLog(`Format Tables: ${numFound} unformatted tables found.`);
   });
   context.subscriptions.push(formatTables);
   
@@ -1107,7 +1126,6 @@ ${noteBlock}<p class="source">${source}</p>
     table: string,
   ) => {
     let html = '';
-
     // create anchor ID
     let anchorType = '';
     if (tableType) {
@@ -1117,14 +1135,12 @@ ${noteBlock}<p class="source">${source}</p>
     if(numMinor) {
       anchor += '-' + numMinor;
     }
-
     // note block
     let noteBlock = '';
     notes.forEach(note => {
       let trimmedNote = note.trim();
       if(trimmedNote.length > 0) { noteBlock += `<caption class="note">${note}</caption>\n`; }
     });
-
     html = `
 <div class="report-table-container">
 <table class="report-table" id="${anchor}">
@@ -1133,13 +1149,11 @@ ${noteBlock}<caption class="source">${source}</caption>
 ${getClassedTableHtml(table)}
 </div>
 `;
-
     return html;
   };
 
 function getClassedTableHtml(table:string = '') {
   let html:string = table;
-
   // add empty class attr to every TR,TH,TD if they don't already have a class attr
   html = html.replace(/<(t[rhd])(?! class=)([^>]*?)>/gim, '<$1 class=""$2>');
   // add 'header' class to first TR, and change all TDs inside to THs
@@ -1164,13 +1178,8 @@ function getClassedTableHtml(table:string = '') {
     // TD -> TH
     firstRow = firstRow.replace(/<td/gim,'<th');
     firstRow = firstRow.replace(/<\/td/gim,'</th');
-
     html = html.replace(oldFirstRow,firstRow);
   }
-  
-
-
-
   return html;
 }
 
@@ -1231,6 +1240,7 @@ function getClassedTableHtml(table:string = '') {
 
     // get all ftn links
     let ftnMatches = [...textOut.matchAll(/<a href="#_ftn(\d+)".*?>/gim)];
+    let numFound = ftnMatches.length;
     faodebug.appendLine(ftnMatches.length + ' footnote links found');
     ftnMatches.forEach(ftnMatch => {
       let ftnString:string = ftnMatch[0];
@@ -1263,6 +1273,9 @@ function getClassedTableHtml(table:string = '') {
 
     // Finally, replace text
     replaceCurrentSelectionOrDocumentText(textOut);
+
+    // result message for user
+    consoleLog(`Footnote Ref: ${numFound} footnote links found and updated.`);
   });
   context.subscriptions.push(footnoteRef);
   
@@ -1305,6 +1318,9 @@ function getClassedTableHtml(table:string = '') {
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // target blank
+  // Set any external links (ie non fao-on.org URLs) to open in a new tab by 
+  // adding taget="_blank" to link. Does not remove existing target="_blank" 
+  // from any links.
   const targetBlank = vscode.commands.registerCommand('fao-html-scripts.targetBlank', () => {
     faodebug.appendLine('SCRIPT: targetBlank');
 
@@ -1323,6 +1339,57 @@ function getClassedTableHtml(table:string = '') {
     }
     let textOut = textIn;
     // textOut = formatAsString(textIn);
+
+    // array of valid FAO domains used to determine if link URL is internal
+    const validHostnames = ['fao-on.org','dev.fao-on.org'];
+
+    // find all A tags
+    let linkMatches = [...textOut.matchAll(/<a href="([^">]+)".*?>/gim)];
+    let numFound = linkMatches.length;
+    let numChanged = 0;
+    faodebug.appendLine(linkMatches.length + ' links found');
+    linkMatches.forEach(linkMatch => {
+      let linkString:string = linkMatch[0];
+      let hrefString:string = linkMatch[1];
+      let parsedUrl = URL.parse(hrefString);
+
+      // if URL is invalid, skip this link
+      if (!parsedUrl) {
+        faodebug.appendLine('[x] [URL.parse error: invalid URL] ' + linkString);
+        return;
+      }
+      // if URL domain is FAO, skip this link
+      if(validHostnames.includes(parsedUrl.hostname)) { 
+        faodebug.appendLine('[x] [URL is FAO domain] ' + linkString);
+        return; 
+      }
+      // if href doesn't start with "http", skip this link
+      // [relative URLs should be filtered out by URL.parse above, but this will reject other]
+      if (hrefString.toLowerCase().startsWith('http') === false) { 
+        faodebug.appendLine('[x] [href does not start with http] ' + linkString);
+        return; 
+      }
+      // if link already has target="_blank", skip this link
+      let targetBlankMatches = [...linkString.matchAll(/ target="_blank"/gim)];
+      if (targetBlankMatches.length > 0) { 
+        faodebug.appendLine('[x] [already has target="_blank"] ' + linkString);
+        return; 
+      }
+
+      // add target="_blank" to link
+      linkString = linkString.replace(/>/gim,' target="_blank">');
+      faodebug.appendLine('[+] [target="_blank" added] ' + linkString);
+      numChanged++;
+
+      textOut = textOut.replace(linkMatch[0],linkString);
+    });
+
+
+    // Finally, replace text
+    replaceCurrentSelectionOrDocumentText(textOut);
+
+    // result message for user
+    consoleLog(`Target Blank: ${numFound} links found, ${numChanged} links changed.`);
   });
   context.subscriptions.push(targetBlank);
   
@@ -1367,6 +1434,10 @@ function getClassedTableHtml(table:string = '') {
   // fix headings
   const fixHeadings = vscode.commands.registerCommand('fao-html-scripts.fixHeadings', () => {
     faodebug.appendLine('SCRIPT: fixHeadings');
+    let numFound = 0;
+    let numChanged = 0;
+    const minLevel = 2;
+    const maxLevel = 6;
 
     // Get the active text editor
     const editor = vscode.window.activeTextEditor;
@@ -1383,9 +1454,71 @@ function getClassedTableHtml(table:string = '') {
     }
     let textOut = textIn;
     // textOut = formatAsString(textIn);
+
+
+    // find all headings
+    let hObjects:any = [];
+    let headingMatches = [...textOut.matchAll(/<h(\d).*?<\/h\d>/gim)];
+    numFound = headingMatches.length;
+    headingMatches.forEach( (match, i:number) => {
+      let heading:string = match[0];
+      let parentIndex:number = Number(getParentIndex(headingMatches,i));
+      let oldLevel:number = Number(match[1]);
+      let newLevel:number = Number(oldLevel);
+      hObjects.push([heading, parentIndex, oldLevel, newLevel]);
+    });
+
+    // figure out correct heading levels
+    hObjects.forEach( (hObject:any, i:number) => {
+      let heading:string = hObject[0];
+      let parentIndex:number = hObject[1];
+      let oldLevel:number = hObject[2];
+      let newLevel:number = hObject[3];
+      // if parentIndex is -1, set newLevel to minLevel
+      if (parentIndex < 0) { 
+        newLevel = minLevel; 
+      } else {
+        // otherwise, get the parent's level ...
+        let parentLevel = hObjects[parentIndex][3];
+        //... and set newLevel to parentLevel + 1 (or maxLevel, whichever is lower)
+        newLevel = Math.min(parentLevel + 1, maxLevel);
+      }
+      //update hObjects with newLevel
+      hObjects[i][3] = newLevel;
+    });
+
+    // make changes
+    hObjects.forEach( (hObject:any, i:number) => {
+      // replace oldLevel with NewLevel
+      if (hObject[2] !== hObject[3]){
+        numChanged++;
+        let newHeadingString = hObject[0].replace(/<h\d(.*?)<\/h\d>/gim,`<h${hObject[3]}$1</h${hObject[3]}>`);
+        textOut = textOut.replace(hObject[0],newHeadingString);
+      }
+      let pad:string = '-'.repeat(hObject[3] - 1);
+      faodebug.appendLine(`[${i}] ${pad}h${hObject[3]}, ${hObject[0]}, ${hObject[1]}, ${hObject[2]}`);
+    });
+
+
+
+    // Finally, replace text
+    replaceCurrentSelectionOrDocumentText(textOut);
+
+    // result message for user
+    consoleLog(`Fix Headings: ${numFound} headings found, ${numChanged} headings changed.`);
   });
   context.subscriptions.push(fixHeadings);
   
+  function getParentIndex(headingMatches:any, thisIndex:number) {
+    let thisLevel:number = headingMatches[thisIndex][1];
+    let parentIndex = thisIndex;
+    while(parentIndex >= 0){
+      let parentLevel:number = headingMatches[parentIndex][1];
+      if(parentLevel < thisLevel){ return parentIndex; }
+      parentIndex--;
+    }
+    return -1;
+  }
 
 
 
