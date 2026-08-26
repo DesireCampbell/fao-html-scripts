@@ -790,7 +790,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Finally, replace text
     replaceCurrentSelectionOrDocumentText(textOut);
-
     // result message for user
     consoleLog(`Fix Lists: ${numFound} lists found and fixed.`);
   });
@@ -914,9 +913,8 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Finally, replace text
     replaceCurrentSelectionOrDocumentText(textOut);
-
     // result message for user
-    consoleLog(`Format Charts: ${numFound} charts found.`);
+    consoleLog(`Format Charts: ${numFound} unformatted charts found.`);
   });
   context.subscriptions.push(formatCharts);
   
@@ -1109,7 +1107,6 @@ ${noteBlock}<p class="source">${source}</p>
 
     // Finally, replace text
     replaceCurrentSelectionOrDocumentText(textOut);
-
     // result message for user
     consoleLog(`Format Tables: ${numFound} unformatted tables found.`);
   });
@@ -1273,7 +1270,6 @@ function getClassedTableHtml(table:string = '') {
 
     // Finally, replace text
     replaceCurrentSelectionOrDocumentText(textOut);
-
     // result message for user
     consoleLog(`Footnote Ref: ${numFound} footnote links found and updated.`);
   });
@@ -1387,7 +1383,6 @@ function getClassedTableHtml(table:string = '') {
 
     // Finally, replace text
     replaceCurrentSelectionOrDocumentText(textOut);
-
     // result message for user
     consoleLog(`Target Blank: ${numFound} links found, ${numChanged} links changed.`);
   });
@@ -1490,7 +1485,7 @@ function getClassedTableHtml(table:string = '') {
     // make changes
     hObjects.forEach( (hObject:any, i:number) => {
       // replace oldLevel with NewLevel
-      if (hObject[2] !== hObject[3]){
+      if (Number(hObject[2]) !== Number(hObject[3])){
         numChanged++;
         let newHeadingString = hObject[0].replace(/<h\d(.*?)<\/h\d>/gim,`<h${hObject[3]}$1</h${hObject[3]}>`);
         textOut = textOut.replace(hObject[0],newHeadingString);
@@ -1503,7 +1498,6 @@ function getClassedTableHtml(table:string = '') {
 
     // Finally, replace text
     replaceCurrentSelectionOrDocumentText(textOut);
-
     // result message for user
     consoleLog(`Fix Headings: ${numFound} headings found, ${numChanged} headings changed.`);
   });
@@ -1558,11 +1552,13 @@ function getClassedTableHtml(table:string = '') {
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // en to fr
+  // replace template strings with French equivalents
+  // add nbsp after certain punctuation marks
+  // add nbsp as thousands separator in numbers
   const englishToFrench = vscode.commands.registerCommand('fao-html-scripts.englishToFrench', () => {
     faodebug.appendLine('SCRIPT: englishToFrench');
-    // replace template strings with French equivalents
-    // add nbsp after certain punctuation marks
-    // add nbsp as thousands separator in numbers
+    let numFound = 0;
+    let numChanged = 0;
 
     // Get the active text editor
     const editor = vscode.window.activeTextEditor;
@@ -1579,6 +1575,57 @@ function getClassedTableHtml(table:string = '') {
     }
     let textOut = textIn;
     // textOut = formatAsString(textIn);
+
+
+    // 1. Replace strings
+    const stringReplacementList = [
+      ['Back to image</a','Retourner au graphique</a'],
+      ['Return to image</a','Retourner au graphique</a'],
+      ['Accessible version</a','Description accessible</a'],
+      ['<summary>Accessible version</summary>','<summary>Description accessible</summary>'],
+      ['Graphical Descriptions</h','Description des graphiques</h'],
+      ['Footnotes</h','Notes de bas de page</h'],
+    ];
+    stringReplacementList.forEach(stringPair => {
+      let en = stringPair[0];
+      let fr = stringPair[1];
+      textOut = textOut.replaceAll(en,fr);
+    });
+    // 1A. replace src subdirectory
+    textOut = textOut.replace(/( src="[^"]*)\/en\/([^"]*)"/gim,'$1/fr/$2');
+    // let srcMatches = [...textOut.matchAll(/( src="[^"]*)\/en\/([^"]*)"/gim)];
+    // numFound =+ srcMatches.length;
+    // numChanged =+ srcMatches.length;
+    // srcMatches.forEach(match => {
+    //   textOut = textOut.replace(match[0],`${match[1]}/fr/${match[2]}`);
+    // });
+
+    // 2. Regular space to non-breaking-space &nbsp;
+    // -> thousands separator 
+    // textOut = textOut.replace(/(\d)\s(\d{3})/gim,'$1&nbsp;$2');
+    let thousandsMatches = [...textOut.matchAll(/\d(\s\d{3})+(?!\d)/gim)];
+    thousandsMatches.forEach(match => {
+      let newString = match[0].replace(/\s/gim,'&nbsp;');
+      textOut = textOut.replace(match[0],newString);
+    });
+    // -> unit symbol
+    textOut = textOut.replace(/(\d)\s([%$])/gim,'$1&nbsp;$2');
+    // let symbolMatches = [...textOut.matchAll(/(\d)\s([%$])/gim)];
+    // -> other punctuation
+    textOut = textOut.replace(/([«])\s/gim,'$1&nbsp;'); // symbol then space
+    textOut = textOut.replace(/\s([:»])/gim,'&nbsp;$1'); // space then symbol
+    // let punctuationMatches = [...textOut.matchAll(/(\w)\s[:]/gim)];
+
+    // 3. Regular hyphen to non-breaking-hyphen &#8209;
+
+
+
+
+    // Finally, replace text
+    replaceCurrentSelectionOrDocumentText(textOut);
+    // result message for user
+    consoleLog(`EN -> FR`);
+    // consoleLog(`EN -> FR: ${numFound} found, ${numChanged} changed.`);
   });
   context.subscriptions.push(englishToFrench);
 
@@ -1627,6 +1674,8 @@ function getClassedTableHtml(table:string = '') {
   // https://www.eliostruyf.com/devhack-rename-file-vscode-extension/
   const renameFigFiles = vscode.commands.registerCommand('fao-html-scripts.renameFigFiles', () => {
     faodebug.appendLine('SCRIPT: renameFigFiles');
+    let numFound = 0;
+    let numChanged = 0;
 
     // Get the active text editor
     const editor = vscode.window.activeTextEditor;
@@ -1643,6 +1692,12 @@ function getClassedTableHtml(table:string = '') {
     }
     let textOut = textIn;
     // textOut = formatAsString(textIn);
+
+
+    // Finally, replace text
+    replaceCurrentSelectionOrDocumentText(textOut);
+    // result message for user
+    consoleLog(`Rename fig files: ${numFound} found, ${numChanged} changed.`);
   });
   context.subscriptions.push(renameFigFiles);
 }
