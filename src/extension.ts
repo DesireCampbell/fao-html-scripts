@@ -875,7 +875,7 @@ export function activate(context: vscode.ExtensionContext) {
       let yAxisLabel     = '';
       let remainingLines = '';
 
-      const s = [...match[0].matchAll(/<p>\s*(?:<strong>)?Figure ([A-Z0-9]+)([\.\-‑ ]*)([A-Z0-9]*)\s*(?:<strong>)?\s*<\/p>\s*<p>(.*?)<\/p>\s*<p>(.*?)<\/p>([\s\S]*)/gim)][0];
+      const s = [...match[0].matchAll(/<p>\s*(?:<strong>|<b>)?Figure ([A-Z0-9]+)([\.\-‑ ]*)([A-Z0-9]*)\s*(?:<strong>|<b>)?\s*<\/p>\s*<p>(.*?)<\/p>\s*<p>(.*?)<\/p>([\s\S]*)/gim)][0];
       if(s) {
         numMajor       = s[1] !== undefined ? s[1] : '';
         numSeparator   = s[2] !== undefined ? s[2] : '';
@@ -885,10 +885,11 @@ export function activate(context: vscode.ExtensionContext) {
         remainingLines = s[6] !== undefined ? s[6] : '';
 
         //remove P tags from remaining lines
-        remainingLines = remainingLines.replace('<p>', '');
-        remainingLines = remainingLines.replace('</p>', '');
+        remainingLines = remainingLines.replaceAll('<p>', '');
+        remainingLines = remainingLines.replaceAll('</p>', '');
         let lines = remainingLines.split(/\n/);
         lines.forEach(line => {
+          faodebug.appendLine(`remainingLines: ${line}`);
           if(line.toLowerCase().startsWith('source')) {
             // this is the source line
             source = line;
@@ -1086,8 +1087,52 @@ ${noteBlock}<p class="source">${source}</p>
     const matchedTables3 = [...textOut.matchAll(rTables3)];
     numFound += matchedTables3.length;
     faodebug.appendLine(matchedTables3.length + ' tables found in format 3');
-    matchedTables3.forEach(match => {
-      faodebug.appendLine(match[0]);
+    matchedTables3.forEach(tableMatch => {
+      // faodebug.appendLine(tableMatch[0]);
+      let textOld = tableMatch[0];
+      
+      // vars to eventually pass to getTableHtml()
+      let tableType: string = '';
+      let numMajor: string = '';
+      let numSeparator: string = '';
+      let numMinor: string = '';
+      let title: string = '';
+      let table: string = '';
+      let notes: string[] = [];
+      let source: string = '';
+  
+      // get title
+      let tableTitleMatch = [...textOld.matchAll(/<p>\s*(?:<strong>)?(Figure|Table|Chart) ([A-Z0-9]+)([\.\-‑ ]*)([A-Z0-9]*).*?\s*<p>(.*?)<\/p>\s*<table/gim)][0];
+      if(tableTitleMatch) {
+        // faodebug.appendLine(`tableTitleMatch: ${tableTitleMatch}`);
+        tableType    = tableTitleMatch[1] !== undefined ? tableTitleMatch[1] : '';
+        numMajor     = tableTitleMatch[2] !== undefined ? tableTitleMatch[2] : '';
+        numSeparator = tableTitleMatch[3] !== undefined ? tableTitleMatch[3] : '';
+        numMinor     = tableTitleMatch[4] !== undefined ? tableTitleMatch[4] : '';
+        title        = tableTitleMatch[5] !== undefined ? tableTitleMatch[5] : '';
+        // faodebug.appendLine(tableType + ' ' + numMajor  + numSeparator + numMinor + ': ' + title);
+        // faodebug.appendLine(tableTitleMatch[1] + ' ' + tableTitleMatch[2]  + tableTitleMatch[3] + tableTitleMatch[4] + ': ' + tableTitleMatch[5]);
+      }
+
+      // get table
+      table = [...textOld.matchAll(/<table[\s\S]*?<\/table>/gim)][0][0] || '';
+      // table = getClassedTableHtml(table);
+
+      // get notes/source
+      let notesSourceMatch = [...textOld.matchAll(/<\/table>[\s\S]*/gim)][0];
+      let lines = [...notesSourceMatch[0].matchAll(/<p>(.*?)<\/p>/gim)];
+      lines.forEach(lineMatch => {
+        let lineText = lineMatch[1] !== undefined ? lineMatch[1] : '';
+        if(lineText.toLowerCase().startsWith('source')) {
+          source = lineText;
+        }else if(lineText.toLowerCase().startsWith('note')) {
+          notes.push(lineText);
+        }
+      });
+      
+      // generate table from template
+      let newTableHtml = getTableHtml(tableType, numMajor, numSeparator, numMinor, title, notes, source, table);
+      textOut = textOut.replace(textOld, newTableHtml);
     });
 
 
@@ -1138,11 +1183,56 @@ ${noteBlock}<p class="source">${source}</p>
       let trimmedNote = note.trim();
       if(trimmedNote.length > 0) { noteBlock += `<caption class="note">${note}</caption>\n`; }
     });
+    //colBlock
+    let colBlock = '';
+    let colCount = 0;
+    let rows = [...table.matchAll(/<tr>[\s\S]*?<\/tr>/gim)];
+    rows.forEach( row => {
+      colCount = Math.max( colCount, [...row[0].matchAll(/<(td|th)/gim)].length );
+    });
+    if (colCount > 0){
+      colBlock = '\n<colgroup>' + '\n<col style="width:8ch;">'.repeat(colCount) + '\n</colgroup>';
+    }
+    //remove opening table tag
+    table = table.replace(/<table[^>]*?>/gim,'');
     html = `
 <div class="report-table-container">
 <table class="report-table" id="${anchor}">
 <caption class="title"><span>${tableType} ${numMajor}${numSeparator}${numMinor}</span> ${title}</caption>
-${noteBlock}<caption class="source">${source}</caption>
+${noteBlock}<caption class="source">${source}</caption>${colBlock}
+${getClassedTableHtml(table)}
+</div>
+`;
+    return html;
+  };
+
+    const getAltTableHtml = (
+    // tableType: string = 'Table', 
+    // numMajor: string,
+    // numSeparator: string,
+    // numMinor: string,
+    // title: string,
+    // notes: string[],
+    // source: string,
+    table: string,
+  ) => {
+    let html = '';
+    
+    //colBlock
+    let colBlock = '';
+    let colCount = 0;
+    let rows = [...table.matchAll(/<tr>[\s\S]*?<\/tr>/gim)];
+    rows.forEach( row => {
+      colCount = Math.max( colCount, [...row[0].matchAll(/<(td|th)/gim)].length );
+    });
+    if (colCount > 0){
+      colBlock = '\n<colgroup>' + '\n<col style="width:8ch;">'.repeat(colCount) + '\n</colgroup>';
+    }
+    //remove opening table tag
+    table = table.replace(/<table[^>]*?>/gim,'');
+    html = `
+<div class="report-table-container">
+<table class="report-table">${colBlock}
 ${getClassedTableHtml(table)}
 </div>
 `;
