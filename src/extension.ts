@@ -126,6 +126,8 @@ export function activate(context: vscode.ExtensionContext) {
       'figure', '/figure', 
       'figcaption', '/figcaption',
       'table', '/table', 
+      'colgroup', '/colgroup', 
+      'col', 
       'caption', 
       'thead', '/thead', 
       'tbody', '/tbody', 
@@ -156,6 +158,7 @@ export function activate(context: vscode.ExtensionContext) {
       '/figcaption',
       '/table', 
       '/caption', 
+      '/colgroup', 
       '/thead', 
       '/tbody', 
       '/tfoot',
@@ -1061,7 +1064,6 @@ ${noteBlock}<p class="source">${source}</p>
 
       // get table
       table = [...textOld.matchAll(/<table[\s\S]*?<\/table>/gim)][0][0] || '';
-      // table = getClassedTableHtml(table);
 
       // get notes/source
       let notesSourceMatch = [...textOld.matchAll(/<\/table>[\s\S]*/gim)][0];
@@ -1077,62 +1079,23 @@ ${noteBlock}<p class="source">${source}</p>
       
       // generate table from template
       let newTableHtml = getTableHtml(tableType, numMajor, numSeparator, numMinor, title, notes, source, table);
-      textOut = textOut.replace(textOld, newTableHtml);
+      textOut = textOut.replace(textOld, formatAsNormal(newTableHtml));
     });
 
 
     // Format 3
     // alt text tables
-    const rTables3 = /<\/summary>\s*<table[\s\S]*?<\/details>/gim;
+    const rTables3 = /<\/summary>\s*(<table[\s\S]*?)<\/details>/gim;
     const matchedTables3 = [...textOut.matchAll(rTables3)];
     numFound += matchedTables3.length;
     faodebug.appendLine(matchedTables3.length + ' tables found in format 3');
     matchedTables3.forEach(tableMatch => {
       // faodebug.appendLine(tableMatch[0]);
       let textOld = tableMatch[0];
-      
-      // vars to eventually pass to getTableHtml()
-      let tableType: string = '';
-      let numMajor: string = '';
-      let numSeparator: string = '';
-      let numMinor: string = '';
-      let title: string = '';
-      let table: string = '';
-      let notes: string[] = [];
-      let source: string = '';
-  
-      // get title
-      let tableTitleMatch = [...textOld.matchAll(/<p>\s*(?:<strong>)?(Figure|Table|Chart) ([A-Z0-9]+)([\.\-‑ ]*)([A-Z0-9]*).*?\s*<p>(.*?)<\/p>\s*<table/gim)][0];
-      if(tableTitleMatch) {
-        // faodebug.appendLine(`tableTitleMatch: ${tableTitleMatch}`);
-        tableType    = tableTitleMatch[1] !== undefined ? tableTitleMatch[1] : '';
-        numMajor     = tableTitleMatch[2] !== undefined ? tableTitleMatch[2] : '';
-        numSeparator = tableTitleMatch[3] !== undefined ? tableTitleMatch[3] : '';
-        numMinor     = tableTitleMatch[4] !== undefined ? tableTitleMatch[4] : '';
-        title        = tableTitleMatch[5] !== undefined ? tableTitleMatch[5] : '';
-        // faodebug.appendLine(tableType + ' ' + numMajor  + numSeparator + numMinor + ': ' + title);
-        // faodebug.appendLine(tableTitleMatch[1] + ' ' + tableTitleMatch[2]  + tableTitleMatch[3] + tableTitleMatch[4] + ': ' + tableTitleMatch[5]);
-      }
-
-      // get table
-      table = [...textOld.matchAll(/<table[\s\S]*?<\/table>/gim)][0][0] || '';
-      // table = getClassedTableHtml(table);
-
-      // get notes/source
-      let notesSourceMatch = [...textOld.matchAll(/<\/table>[\s\S]*/gim)][0];
-      let lines = [...notesSourceMatch[0].matchAll(/<p>(.*?)<\/p>/gim)];
-      lines.forEach(lineMatch => {
-        let lineText = lineMatch[1] !== undefined ? lineMatch[1] : '';
-        if(lineText.toLowerCase().startsWith('source')) {
-          source = lineText;
-        }else if(lineText.toLowerCase().startsWith('note')) {
-          notes.push(lineText);
-        }
-      });
-      
+      let table:string = tableMatch[1];
       // generate table from template
-      let newTableHtml = getTableHtml(tableType, numMajor, numSeparator, numMinor, title, notes, source, table);
-      textOut = textOut.replace(textOld, newTableHtml);
+      let newTableHtml = '</summary>' + getAltTableHtml(table) + '\n</details>';
+      textOut = textOut.replace(textOld, formatAsNormal(newTableHtml));
     });
 
 
@@ -1158,14 +1121,14 @@ ${noteBlock}<p class="source">${source}</p>
   context.subscriptions.push(formatTables);
   
   const getTableHtml = (
-    tableType: string = 'Table', 
-    numMajor: string,
-    numSeparator: string,
-    numMinor: string,
-    title: string,
-    notes: string[],
-    source: string,
-    table: string,
+    tableType:string = 'Table', 
+    numMajor:string,
+    numSeparator:string,
+    numMinor:string,
+    title:string,
+    notes:string[],
+    source:string,
+    table:string,
   ) => {
     let html = '';
     // create anchor ID
@@ -1201,19 +1164,12 @@ ${noteBlock}<p class="source">${source}</p>
 <caption class="title"><span>${tableType} ${numMajor}${numSeparator}${numMinor}</span> ${title}</caption>
 ${noteBlock}<caption class="source">${source}</caption>${colBlock}
 ${getClassedTableHtml(table)}
-</div>
-`;
+</div>`;
+    html = html.replace(/\n{2,}/gim,'\n');
     return html;
   };
 
     const getAltTableHtml = (
-    // tableType: string = 'Table', 
-    // numMajor: string,
-    // numSeparator: string,
-    // numMinor: string,
-    // title: string,
-    // notes: string[],
-    // source: string,
     table: string,
   ) => {
     let html = '';
@@ -1234,8 +1190,8 @@ ${getClassedTableHtml(table)}
 <div class="report-table-container">
 <table class="report-table">${colBlock}
 ${getClassedTableHtml(table)}
-</div>
-`;
+</div>`;
+    html = html.replace(/\n{2,}/gim,'\n');
     return html;
   };
 
