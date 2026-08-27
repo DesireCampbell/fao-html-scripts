@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/DesireCampbell/fao-html-scripts.git"
   },
-  "version": "0.1.1",
+  "version": "0.9.0",
   "engines": {
     "vscode": "^1.109.0"
   },
@@ -51,11 +51,11 @@
       },
       {
         "command": "fao-html-scripts.englishToFrench",
-        "title": "English To French" 
+        "title": "English To French"
       },
       {
         "command": "fao-html-scripts.renameFigFiles",
-        "title": "Rename fig files" 
+        "title": "Rename fig files"
       }
     ],
     "submenus": [
@@ -134,11 +134,11 @@
       ]
     },
     "viewsWelcome": [
-			{
-				"view": "fao-html-scripts-view",
-				"contents": "FAO HTML helper \n[$(clippy) Paste as HTML](command:fao-html-scripts.pasteAsHTML)\n[$(clear-all) Strip Styles](command:fao-html-scripts.stripStyles)\n[$(list-ordered) Fix Lists](command:fao-html-scripts.fixLists)\n[$(graph-line) Format Charts](command:fao-html-scripts.formatCharts)\n[$(table) Format Tables](command:fao-html-scripts.formatTables)\n[$(quote) Footnote Ref](command:fao-html-scripts.footnoteRef)\n[$(open-in-window) Target Blank](command:fao-html-scripts.targetBlank)\n[$(text-size) Fix Headings](command:fao-html-scripts.fixHeadings)\n[$(comment) English To French](command:fao-html-scripts.englishToFrench)\n[$(rename) Rename fig files](command:fao-html-scripts.renameFigFiles)\n\n"
-			}
-		],
+      {
+        "view": "fao-html-scripts-view",
+        "contents": "FAO HTML helper \n[$(clippy) Paste as HTML](command:fao-html-scripts.pasteAsHTML)\n[$(clear-all) Strip Styles](command:fao-html-scripts.stripStyles)\n[$(list-ordered) Fix Lists](command:fao-html-scripts.fixLists)\n[$(graph-line) Format Charts](command:fao-html-scripts.formatCharts)\n[$(table) Format Tables](command:fao-html-scripts.formatTables)\n[$(quote) Footnote Ref](command:fao-html-scripts.footnoteRef)\n[$(open-in-window) Target Blank](command:fao-html-scripts.targetBlank)\n[$(text-size) Fix Headings](command:fao-html-scripts.fixHeadings)\n[$(comment) English To French](command:fao-html-scripts.englishToFrench)\n[$(rename) Rename fig files](command:fao-html-scripts.renameFigFiles)\n\n"
+      }
+    ],
     "views": {
       "fao-html-scripts": [
         {
@@ -158,13 +158,20 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.109.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "typescript-eslint": "^8.54.0",
+    "@types/vscode": "^1.109.0",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.39.2",
     "typescript": "^5.9.3",
-    "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2"
+    "typescript-eslint": "^8.54.0"
+  },
+  "overrides": {
+    "ajv": "^8.17.1",
+    "whatwg-url": "^14.0.0"
+  },
+  "dependencies": {
+    "punycode": "^2.3.1"
   }
 }

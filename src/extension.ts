@@ -1753,7 +1753,7 @@ function getClassedTableHtml(table:string = '') {
     // Finally, replace text
     // replaceCurrentSelectionOrDocumentText(textOut);
     // result message for user
-    consoleLog(`Rename fig files: ${numFound} found, ${numChanged} changed.`);
+    consoleLog(`[WIP] Rename fig files: ${numFound} found, ${numChanged} changed.`);
   });
   context.subscriptions.push(renameFigFiles);
 }
