@@ -136,14 +136,15 @@
     "viewsWelcome": [
 			{
 				"view": "fao-html-scripts-view",
-				"contents": "FAO HTML helper \n[$(clippy) Paste as HTML](command:fao-html-scripts.pasteAsHTML)\n[$(clear-all) Strip Styles](command:fao-html-scripts.stripStyles)\n[$(list-ordered) Fix Lists](command:fao-html-scripts.fixLists)\n[$(graph-line) Format Charts](command:fao-html-scripts.formatCharts)\n[$(table) Format Tables](command:fao-html-scripts.formatTables)\n[$(quote) Footnote Ref](command:fao-html-scripts.footnoteRef)\n[$(open-in-window) Target Blank](command:fao-html-scripts.targetBlank)\n[$(text-size) Fix Headings](command:fao-html-scripts.fixHeadings)\n[$(comment) English To French](command:fao-html-scripts.englishToFrench) \n[$(rename) Rename fig files](command:fao-html-scripts.renameFigFiles) \n\n"
+				"contents": "FAO HTML helper \n[$(clippy) Paste as HTML](command:fao-html-scripts.pasteAsHTML)\n[$(clear-all) Strip Styles](command:fao-html-scripts.stripStyles)\n[$(list-ordered) Fix Lists](command:fao-html-scripts.fixLists)\n[$(graph-line) Format Charts](command:fao-html-scripts.formatCharts)\n[$(table) Format Tables](command:fao-html-scripts.formatTables)\n[$(quote) Footnote Ref](command:fao-html-scripts.footnoteRef)\n[$(open-in-window) Target Blank](command:fao-html-scripts.targetBlank)\n[$(text-size) Fix Headings](command:fao-html-scripts.fixHeadings)\n[$(comment) English To French](command:fao-html-scripts.englishToFrench)\n[$(rename) Rename fig files](command:fao-html-scripts.renameFigFiles)\n\n"
 			}
 		],
     "views": {
       "fao-html-scripts": [
         {
           "id": "fao-html-scripts-view",
-          "name": "FAO HTML Scripts"
+          "name": "FAO HTML Scripts",
+          "icon": "resources/icon.png"
         }
       ]
     }

@@ -1347,21 +1347,21 @@ function getClassedTableHtml(table:string = '') {
     linkMatches.forEach(linkMatch => {
       let linkString:string = linkMatch[0];
       let hrefString:string = linkMatch[1];
-      let parsedUrl = URL.parse(hrefString);
-
+      // let parsedUrl = URL.parse(hrefString);
       // if URL is invalid, skip this link
-      if (!parsedUrl) {
-        faodebug.appendLine('[x] [URL.parse error: invalid URL] ' + linkString);
+      if (URL.canParse(hrefString) === false) {
+        faodebug.appendLine('[x] [URL parse error] ' + linkString);
         return;
       }
+      let parsedUrl = new URL(hrefString);
+
       // if URL domain is FAO, skip this link
       if(validHostnames.includes(parsedUrl.hostname)) { 
         faodebug.appendLine('[x] [URL is FAO domain] ' + linkString);
         return; 
       }
-      // if href doesn't start with "http", skip this link
-      // [relative URLs should be filtered out by URL.parse above, but this will reject other]
-      if (hrefString.toLowerCase().startsWith('http') === false) { 
+      // if protocol isn't "http" or "https", skip this link
+      if (parsedUrl.protocol.startsWith('http') === false) { 
         faodebug.appendLine('[x] [href does not start with http] ' + linkString);
         return; 
       }
@@ -1671,8 +1671,10 @@ function getClassedTableHtml(table:string = '') {
   // This script expects the fig files to be in either a subfolder named "en" 
   // or "fr" and will attempt to rename the image files to match the filenames 
   // present in the HTML.
+  // TODO: expand functionality to include non-PNG file types (currently assumes 
+  // PNG file type for fig name, excludes non-PNGs from directory scan)
   // https://www.eliostruyf.com/devhack-rename-file-vscode-extension/
-  const renameFigFiles = vscode.commands.registerCommand('fao-html-scripts.renameFigFiles', () => {
+  const renameFigFiles = vscode.commands.registerCommand('fao-html-scripts.renameFigFiles', async () => {
     faodebug.appendLine('SCRIPT: renameFigFiles');
     let numFound = 0;
     let numChanged = 0;
@@ -1693,15 +1695,109 @@ function getClassedTableHtml(table:string = '') {
     let textOut = textIn;
     // textOut = formatAsString(textIn);
 
+    // get fig names and directories from document
+    let figMatches = [...textOut.matchAll(/img src="([^"]+?)\/(en|fr)\/(fig[^"]+)"/gim)];
+    let figDirNames:any = [];
+    let figDirCount = 0;
+    figMatches.forEach(match => {
+      let figDir = match[2];
+      let figName = match[3];
+      // faodebug.appendLine(`${figDir}/${figName}`);
+      if (figDirNames[figDir]) {
+        figDirNames[figDir].push(figName);
+      } else {
+        figDirNames[figDir] = [figName];
+        figDirCount++;
+      }
+    });
+    faodebug.appendLine(`${figMatches.length} figures found in document across ${figDirCount} directories.`);
+
+    // for each fig directory, get list of filenames that don't match any fig names
+    for (const dir in figDirNames) {
+      // let allFiles = [];
+      // get files in en subdir
+      let folderUri = vscode.Uri.joinPath(editor.document.uri, '..', dir);
+      const allFiles = await vscode.workspace.fs.readDirectory(folderUri);
+      // faodebug.appendLine(folderUri.toString());
+      // renameAllFilesInFolder(folderUri);
+      // faodebug.appendLine(files.toString());
+      let eligibleFiles = allFiles.filter( file => {
+        let filename = file[0];
+        let filetype = file[1];
+        if (filetype === vscode.FileType.File) {
+          // is a file (nor dir)...
+          let match = [...filename.matchAll(/^fig.*png$/gim)];
+          if (match.length < 1) {
+            // ...and name doesn't match fi
+
+          }
+          faodebug.appendLine(`${filename} ${match.length}`);
+        }
+        // otherwise the file is ineleigible
+        return false;
+      });
+
+      // faodebug.appendLine(`Directory ${dir} has ${} files (${} eligible)`);
+      // figDirNames[dir].forEach((figName: any) => {
+      //   faodebug.appendLine(`-> ${figName}`);
+      // });
+
+    }
+
+    
+
+
+
+
 
     // Finally, replace text
-    replaceCurrentSelectionOrDocumentText(textOut);
+    // replaceCurrentSelectionOrDocumentText(textOut);
     // result message for user
     consoleLog(`Rename fig files: ${numFound} found, ${numChanged} changed.`);
   });
   context.subscriptions.push(renameFigFiles);
 }
 
+async function renameAllFilesInFolder(folderUri: vscode.Uri) {
+    try {
+        // 1. Read all files inside the target directory
+        const entries = await vscode.workspace.fs.readDirectory(folderUri);
+        
+        // 2. Instantiate a WorkspaceEdit object
+        const workspaceEdit = new vscode.WorkspaceEdit();
+        let filesRenamedCount = 0;
+
+        for (const [name, type] of entries) {
+            // Process only files (skip subdirectories)
+            if (type === vscode.FileType.File) {
+                const oldUri = vscode.Uri.joinPath(folderUri, name);
+                
+                // Define your renaming logic here (e.g., prefixing, suffixing, regex)
+                const newName = `prefix_${name}`; 
+                const newUri = vscode.Uri.joinPath(folderUri, newName);
+
+                // Queue the rename operation
+                workspaceEdit.renameFile(oldUri, newUri, { overwrite: false });
+                filesRenamedCount++;
+            }
+        }
+
+        // 3. Apply all queued changes simultaneously
+        if (filesRenamedCount > 0) {
+            const success = await vscode.workspace.applyEdit(workspaceEdit);
+            if (success) {
+                vscode.window.showInformationMessage(`Successfully renamed ${filesRenamedCount} files.`);
+            } else {
+                vscode.window.showErrorMessage("Failed to apply the file renames.");
+            }
+        } else {
+            vscode.window.showWarningMessage("No files found to rename.");
+        }
+
+    } catch (error) {
+        vscode.window.showErrorMessage(`Error renaming files: ${error}`);
+    }
+}
 
 
 
