@@ -1756,15 +1756,16 @@ function getClassedTableHtml(table:string = '') {
         figDirCount++;
       }
     });
-    faodebug.appendLine(`${figMatches.length} figures found in document across ${figDirCount} directories.`);
+    faodebug.appendLine(`${figMatches.length} figures found in document across ${figDirCount} dir.`);
+    // faodebug.appendLine(figDirNames.toString());
 
     // for each fig directory, get list of filenames that don't match any fig names
     for (const dir in figDirNames) {
+      faodebug.appendLine(`Checking directory ${dir}`);
       // let allFiles = [];
       // get files in en subdir
       let folderUri = vscode.Uri.joinPath(editor.document.uri, '..', dir);
       const allFiles = await vscode.workspace.fs.readDirectory(folderUri);
-      // faodebug.appendLine(folderUri.toString());
       // renameAllFilesInFolder(folderUri);
       // faodebug.appendLine(files.toString());
       let eligibleFiles = allFiles.filter( file => {
@@ -1772,16 +1773,53 @@ function getClassedTableHtml(table:string = '') {
         let filetype = file[1];
         if (filetype === vscode.FileType.File) {
           // is a file (nor dir)...
-          let match = [...filename.matchAll(/^fig.*png$/gim)];
-          if (match.length < 1) {
+          // let match = [...filename.matchAll(/^fig.*png$/gim)];
+          // if (match.length < 1) {
             // ...and name doesn't match fi
-
-          }
-          faodebug.appendLine(`${filename} ${match.length}`);
+            // and isn't a dotfile
+            if(!filename.startsWith('.')){
+              return true;
+            }
+          // }
+          // faodebug.appendLine(`${filename} ${match.length}`);
         }
         // otherwise the file is ineleigible
         return false;
       });
+      faodebug.appendLine('');
+      faodebug.appendLine(`Found ${eligibleFiles.length} files:`);
+      faodebug.appendLine(eligibleFiles.join('\n'));
+      faodebug.appendLine('');
+      faodebug.appendLine(`For ${figDirNames[dir].length} figs:`);
+      faodebug.appendLine(figDirNames[dir].join('\n'));
+      faodebug.appendLine('');
+
+      // for each fig, shift the first file and rename it
+      figDirNames[dir].forEach((fig: string) => {
+        numFound++;
+        let nextFile = eligibleFiles.shift();
+        if (!nextFile) { 
+          faodebug.appendLine(`[x] no files left in dir`);
+          return; 
+        }
+        let oldUri = vscode.Uri.joinPath(folderUri, nextFile[0]);
+        let newUri = vscode.Uri.joinPath(folderUri, fig);
+        if (oldUri.toString().localeCompare(newUri.toString()) === 0) {
+          faodebug.appendLine(`[x] ${oldUri} already named`);
+          return;
+        }
+        faodebug.appendLine(`[+] Rename ${oldUri} to ${newUri}`);
+        const workspaceEdit = new vscode.WorkspaceEdit();
+        try {
+          workspaceEdit.renameFile(oldUri, newUri, { overwrite: false });
+          vscode.workspace.applyEdit(workspaceEdit);
+          numChanged++;
+        } catch (error) {
+
+        }
+      });
+
+      
 
       // faodebug.appendLine(`Directory ${dir} has ${} files (${} eligible)`);
       // figDirNames[dir].forEach((figName: any) => {
@@ -1803,50 +1841,6 @@ function getClassedTableHtml(table:string = '') {
   });
   context.subscriptions.push(renameFigFiles);
 }
-
-async function renameAllFilesInFolder(folderUri: vscode.Uri) {
-    try {
-        // 1. Read all files inside the target directory
-        const entries = await vscode.workspace.fs.readDirectory(folderUri);
-        
-        // 2. Instantiate a WorkspaceEdit object
-        const workspaceEdit = new vscode.WorkspaceEdit();
-        let filesRenamedCount = 0;
-
-        for (const [name, type] of entries) {
-            // Process only files (skip subdirectories)
-            if (type === vscode.FileType.File) {
-                const oldUri = vscode.Uri.joinPath(folderUri, name);
-                
-                // Define your renaming logic here (e.g., prefixing, suffixing, regex)
-                const newName = `prefix_${name}`; 
-                const newUri = vscode.Uri.joinPath(folderUri, newName);
-
-                // Queue the rename operation
-                workspaceEdit.renameFile(oldUri, newUri, { overwrite: false });
-                filesRenamedCount++;
-            }
-        }
-
-        // 3. Apply all queued changes simultaneously
-        if (filesRenamedCount > 0) {
-            const success = await vscode.workspace.applyEdit(workspaceEdit);
-            if (success) {
-                vscode.window.showInformationMessage(`Successfully renamed ${filesRenamedCount} files.`);
-            } else {
-                vscode.window.showErrorMessage("Failed to apply the file renames.");
-            }
-        } else {
-            vscode.window.showWarningMessage("No files found to rename.");
-        }
-
-    } catch (error) {
-        vscode.window.showErrorMessage(`Error renaming files: ${error}`);
-    }
-}
-
-
-
 
 
 
