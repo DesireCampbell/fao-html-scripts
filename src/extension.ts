@@ -448,6 +448,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // remove cruft strings
     const cruftStrings = [
+      '‎',
       /<!--[\s\S]*?-->/,
       /<!--!\[endif\]---->/,
       /<!--\[endif\]---->/,
