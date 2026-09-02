@@ -894,7 +894,7 @@ export function activate(context: vscode.ExtensionContext) {
         remainingLines = remainingLines.replaceAll('</p>', '');
         let lines = remainingLines.split(/\n/);
         lines.forEach(line => {
-          faodebug.appendLine(`remainingLines: ${line}`);
+          // faodebug.appendLine(`remainingLines: ${line}`);
           if(line.toLowerCase().startsWith('source')) {
             // this is the source line
             source = line;
@@ -904,11 +904,11 @@ export function activate(context: vscode.ExtensionContext) {
             notes.push(line);
           }
         });
-        faodebug.appendLine('');
-        faodebug.appendLine('Figure ' + numMajor  + numSeparator + numMinor + ': ' + title);
-        faodebug.appendLine(notes.join('\n'));
-        faodebug.appendLine(source);
-        faodebug.appendLine('- - - - - - - - - - - - - - - - - - - - -');
+        // faodebug.appendLine('');
+        // faodebug.appendLine('Figure ' + numMajor  + numSeparator + numMinor + ': ' + title);
+        // faodebug.appendLine(notes.join('\n'));
+        // faodebug.appendLine(source);
+        // faodebug.appendLine('- - - - - - - - - - - - - - - - - - - - -');
         // replace the matched text with the new chart HTML
         let newChart = getChartHtml('Figure', numMajor, numSeparator, numMinor, title, notes, source);
         textOut = textOut.replace(match[0], newChart);
@@ -1109,7 +1109,7 @@ ${noteBlock}<p class="source">${source}</p>
     const rTables4 = /<table table=[\s\S]*?<p>Source.*?<\/p>/gim;
     const matchedTables4 = [...textOut.matchAll(rTables4)];
     numFound += matchedTables4.length;
-    faodebug.appendLine(matchedTables4.length + ' tables found in format 4');
+    faodebug.appendLine(matchedTables4.length + ' tables found in format 4 (not yet implemented)');
     matchedTables4.forEach(match => {
       faodebug.appendLine(match[0]);
     });
