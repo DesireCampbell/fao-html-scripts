@@ -449,6 +449,7 @@ export function activate(context: vscode.ExtensionContext) {
     // remove cruft strings
     const cruftStrings = [
       '‎',
+      'Error! No style name given.',
       /<!--[\s\S]*?-->/,
       /<!--!\[endif\]---->/,
       /<!--\[endif\]---->/,
@@ -1053,14 +1054,14 @@ ${noteBlock}<p class="source">${source}</p>
       // get title
       let tableTitleMatch = [...textOld.matchAll(/<p>\s*(?:<strong>)?(Figure|Table|Chart|Tableau) ([A-Z0-9]+)([\.\-‑ ]*)([A-Z0-9]*).*?\s*<p>(.*?)<\/p>\s*<table/gim)][0];
       if(tableTitleMatch) {
-        faodebug.appendLine(`tableTitleMatch: ${tableTitleMatch}`);
+        // faodebug.appendLine(`tableTitleMatch: ${tableTitleMatch}`);
         tableType    = tableTitleMatch[1] !== undefined ? tableTitleMatch[1] : '';
         numMajor     = tableTitleMatch[2] !== undefined ? tableTitleMatch[2] : '';
         numSeparator = tableTitleMatch[3] !== undefined ? tableTitleMatch[3] : '';
         numMinor     = tableTitleMatch[4] !== undefined ? tableTitleMatch[4] : '';
         title        = tableTitleMatch[5] !== undefined ? tableTitleMatch[5] : '';
         // faodebug.appendLine(tableType + ' ' + numMajor  + numSeparator + numMinor + ': ' + title);
-        faodebug.appendLine(tableTitleMatch[1] + ' ' + tableTitleMatch[2]  + tableTitleMatch[3] + tableTitleMatch[4] + ': ' + tableTitleMatch[5]);
+        // faodebug.appendLine(tableTitleMatch[1] + ' ' + tableTitleMatch[2]  + tableTitleMatch[3] + tableTitleMatch[4] + ': ' + tableTitleMatch[5]);
       }
 
       // get table
@@ -1068,12 +1069,15 @@ ${noteBlock}<p class="source">${source}</p>
 
       // get notes/source
       let notesSourceMatch = [...textOld.matchAll(/<\/table>[\s\S]*/gim)][0];
+      faodebug.appendLine('notesSourceMatch: ' + notesSourceMatch[0]);
       let lines = [...notesSourceMatch[0].matchAll(/<p>(.*?)<\/p>/gim)];
       lines.forEach(lineMatch => {
         let lineText = lineMatch[1] !== undefined ? lineMatch[1] : '';
+        faodebug.appendLine('lineText: ' + lineText);
         if(lineText.toLowerCase().startsWith('source')) {
           source = lineText;
-        }else if(lineText.toLowerCase().startsWith('note')) {
+        }else {
+        // }else if(lineText.toLowerCase().startsWith('note')) {
           notes.push(lineText);
         }
       });
