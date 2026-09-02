@@ -1020,7 +1020,7 @@ ${noteBlock}<p class="source">${source}</p>
 
     // Format 1
     // <p>Table ... <table ... <p>Source ... </p>
-    const rTables1 = /<p>\s*(?:<strong>)?(?:Figure|Table|Chart).*?\n*\S*<table[\s\S]*?<p>Source.*?<\/p>/gim;
+    const rTables1 = /<p>\s*(?:<strong>)?(?:Figure|Table|Chart|Tableau).*?\n*\S*<table[\s\S]*?<p>Source.*?<\/p>/gim;
     const matchedTables1 = [...textOut.matchAll(rTables1)];
     numFound += matchedTables1.length;
     faodebug.appendLine(matchedTables1.length + ' tables found in format 1');
@@ -1032,7 +1032,7 @@ ${noteBlock}<p class="source">${source}</p>
     // Format 2
     // table num and title in separate paragraphs
     // <p>Table ... </p> <p> ... </p> <table ... <p>Source ... </p>
-    const rTables2 = /<p>\s*(?:<strong>)?(?:Figure|Table|Chart).*?\s*<p>.*?<\/p>\s*<table[\s\S]*?<p>Source.*?<\/p>/gim;
+    const rTables2 = /<p>\s*(?:<strong>)?(?:Figure|Table|Chart|Tableau).*?\s*<p>.*?<\/p>\s*<table[\s\S]*?<p>Source.*?<\/p>/gim;
     const matchedTables2 = [...textOut.matchAll(rTables2)];
     faodebug.appendLine(matchedTables2.length + ' tables found in format 2');
     numFound += matchedTables2.length;
@@ -1051,16 +1051,16 @@ ${noteBlock}<p class="source">${source}</p>
       let source: string = '';
   
       // get title
-      let tableTitleMatch = [...textOld.matchAll(/<p>\s*(?:<strong>)?(Figure|Table|Chart) ([A-Z0-9]+)([\.\-‑ ]*)([A-Z0-9]*).*?\s*<p>(.*?)<\/p>\s*<table/gim)][0];
+      let tableTitleMatch = [...textOld.matchAll(/<p>\s*(?:<strong>)?(Figure|Table|Chart|Tableau) ([A-Z0-9]+)([\.\-‑ ]*)([A-Z0-9]*).*?\s*<p>(.*?)<\/p>\s*<table/gim)][0];
       if(tableTitleMatch) {
-        // faodebug.appendLine(`tableTitleMatch: ${tableTitleMatch}`);
+        faodebug.appendLine(`tableTitleMatch: ${tableTitleMatch}`);
         tableType    = tableTitleMatch[1] !== undefined ? tableTitleMatch[1] : '';
         numMajor     = tableTitleMatch[2] !== undefined ? tableTitleMatch[2] : '';
         numSeparator = tableTitleMatch[3] !== undefined ? tableTitleMatch[3] : '';
         numMinor     = tableTitleMatch[4] !== undefined ? tableTitleMatch[4] : '';
         title        = tableTitleMatch[5] !== undefined ? tableTitleMatch[5] : '';
         // faodebug.appendLine(tableType + ' ' + numMajor  + numSeparator + numMinor + ': ' + title);
-        // faodebug.appendLine(tableTitleMatch[1] + ' ' + tableTitleMatch[2]  + tableTitleMatch[3] + tableTitleMatch[4] + ': ' + tableTitleMatch[5]);
+        faodebug.appendLine(tableTitleMatch[1] + ' ' + tableTitleMatch[2]  + tableTitleMatch[3] + tableTitleMatch[4] + ': ' + tableTitleMatch[5]);
       }
 
       // get table
