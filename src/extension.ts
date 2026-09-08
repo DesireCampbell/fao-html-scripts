@@ -1889,6 +1889,137 @@ function getClassedTableHtml(table:string = '') {
 
 
 
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  // Document Report
+  // scans document for key elemenmts and generates an outline/report for 
+  // comparison with same report in other language.
+  // let documentReportArrays:any[];
+  const documentReport = vscode.commands.registerCommand('fao-html-scripts.documentReport', () => {
+    faodebug.appendLine('SCRIPT: documentReport');
+    let numFound = 0;
+    let numChanged = 0;
+    let outlineArray:string[] = [];
+    let reportArray:string[] = [];
+    
+    // Get the active text editor
+    const editor = vscode.window.activeTextEditor;
+    // If there's no active editor, do nothing
+    if (!editor) { 
+      vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [documentReport]');
+      return; 
+    }
+    // get text from selection or document
+    const textIn = getCurrentSelectionOrDocumentText() || '';
+    if (textIn.trim() === '') {
+      vscode.window.showInformationMessage('Error: No text found in the current selection or document. [documentReport]');
+      return;
+    }
+    let textOut = textIn;
+    
+    // OUTLINE
+    // compress the text into a single string with no line breaks...
+    let textString = formatAsString(textOut);
+    // ... then create line breaks for every element we want to count
+    const newlineBeforeTags = [
+      'h1','h2','h3','h4','h5','h6',
+      'p',
+      'li','dt','dd',
+      // '<img',
+      // '<table',
+    ];
+    newlineBeforeTags.forEach(tag => {
+			const rTag = new RegExp(`<${tag}`, 'gim');
+      textString = textString.replace(rTag, '\n$&');
+    });
+    // special regex for tables/charts
+    textString = textString.replace(/<table class="report-table([^"]*)" id="([^"]*)"/gim, '\n$&');
+    textString = textString.replace(/<div class="report-chart([^"]*)" id="([^"]*)"/gim, '\n$&');
+
+
+    // parse the text into an array of lines
+    let textLines = textString.split('\n');
+    textLines.forEach(line => {
+      let trimmedLine = line.trim();
+      if(trimmedLine.length > 0) {
+        let outlineString = '';
+        if (newlineBeforeTags.some(tag => {
+          let sw = trimmedLine.startsWith(`<${tag}`);
+          if (sw) { outlineString = tag; }
+          return sw;
+        })) {
+          // outlineString set in some() callback
+        }else if (trimmedLine.startsWith('<table')) {
+          let tab = trimmedLine.replace(/<table class="report-table([^"]*)" id="([^"]*)".*/gim,'report-table $2');
+          outlineString = tab;
+        }else if (trimmedLine.startsWith('<div')) {
+          let div = trimmedLine.replace(/<div class="report-chart([^"]*)" id="([^"]*)".*/gim,'report-chart $2');
+          outlineString = div;
+        }
+        outlineArray.push(outlineString);
+      }
+    });
+    
+    consoleLog(`documentReport: ${outlineArray.length} lines found in document.`);
+    consoleLog(outlineArray.toString());
+    
+    
+    // REPORT
+    // charts
+    // tables
+    // list items
+    // footnotes
+
+
+
+
+    // store in documentReportArrays for later use
+
+
+    // Finally, replace text
+    // replaceCurrentSelectionOrDocumentText(textOut);
+    // result message for user
+    consoleLog(`documentReport: ${numFound} found, ${numChanged} changed.`);
+  });
+  context.subscriptions.push(documentReport);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // // new command template
   // const faoCommand = vscode.commands.registerCommand('fao-html-scripts.faoCommand', () => {

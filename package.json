@@ -56,6 +56,10 @@
       {
         "command": "fao-html-scripts.renameFigFiles",
         "title": "Rename fig files"
+      },
+      {
+        "command": "fao-html-scripts.documentReport",
+        "title": "Document Report"
       }
     ],
     "submenus": [
@@ -121,6 +125,11 @@
           "command": "fao-html-scripts.renameFigFiles",
           "when": "editorTextFocus",
           "group": "fao-html-scripts@10"
+        },
+        {
+          "command": "fao-html-scripts.documentReport",
+          "when": "editorTextFocus",
+          "group": "fao-html-scripts@11"
         }
       ]
     },
@@ -136,7 +145,7 @@
     "viewsWelcome": [
       {
         "view": "fao-html-scripts-view",
-        "contents": "FAO HTML helper \n[$(clippy) Paste as HTML](command:fao-html-scripts.pasteAsHTML)\n[$(clear-all) Strip Styles](command:fao-html-scripts.stripStyles)\n[$(list-ordered) Fix Lists](command:fao-html-scripts.fixLists)\n[$(graph-line) Format Charts](command:fao-html-scripts.formatCharts)\n[$(table) Format Tables](command:fao-html-scripts.formatTables)\n[$(quote) Footnote Ref](command:fao-html-scripts.footnoteRef)\n[$(open-in-window) Target Blank](command:fao-html-scripts.targetBlank)\n[$(text-size) Fix Headings](command:fao-html-scripts.fixHeadings)\n[$(comment) English To French](command:fao-html-scripts.englishToFrench)\n[$(rename) Rename fig files](command:fao-html-scripts.renameFigFiles)\n\n"
+        "contents": "FAO HTML helper \n[$(clippy) Paste as HTML](command:fao-html-scripts.pasteAsHTML)\n[$(clear-all) Strip Styles](command:fao-html-scripts.stripStyles)\n[$(list-ordered) Fix Lists](command:fao-html-scripts.fixLists)\n[$(graph-line) Format Charts](command:fao-html-scripts.formatCharts)\n[$(table) Format Tables](command:fao-html-scripts.formatTables)\n[$(quote) Footnote Ref](command:fao-html-scripts.footnoteRef)\n[$(open-in-window) Target Blank](command:fao-html-scripts.targetBlank)\n[$(text-size) Fix Headings](command:fao-html-scripts.fixHeadings)\n[$(comment) English To French](command:fao-html-scripts.englishToFrench)\n[$(rename) Rename fig files](command:fao-html-scripts.renameFigFiles)\n[$(rename) Document Report](command:fao-html-scripts.documentReport)\n\n"
       }
     ],
     "views": {
