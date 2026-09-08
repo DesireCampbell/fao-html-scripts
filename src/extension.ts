@@ -1900,6 +1900,8 @@ function getClassedTableHtml(table:string = '') {
     let numChanged = 0;
     let outlineArray:string[] = [];
     let reportArray:string[] = [];
+    let footnoteArray:string[] = [];
+
     
     // Get the active text editor
     const editor = vscode.window.activeTextEditor;
@@ -1917,6 +1919,7 @@ function getClassedTableHtml(table:string = '') {
     let textOut = textIn;
     
     // OUTLINE
+
     // compress the text into a single string with no line breaks...
     let textString = formatAsString(textOut);
     // ... then create line breaks for every element we want to count
@@ -1952,8 +1955,8 @@ function getClassedTableHtml(table:string = '') {
           let tab = trimmedLine.replace(/<table class="report-table([^"]*)" id="([^"]*)".*/gim,'report-table $2');
           outlineString = tab;
         }else if (trimmedLine.startsWith('<div')) {
-          let div = trimmedLine.replace(/<div class="report-chart([^"]*)" id="([^"]*)".*/gim,'report-chart $2');
-          outlineString = div;
+          let fig = trimmedLine.replace(/<div class="report-chart([^"]*)" id="([^"]*)".*/gim,'report-chart $2');
+          outlineString = fig;
         }
         outlineArray.push(outlineString);
       }
@@ -1964,12 +1967,43 @@ function getClassedTableHtml(table:string = '') {
     
     
     // REPORT
+
     // charts
+    let chartMatches = [...textOut.matchAll(/<div class="report-chart([^"]*)" id="([^"]*)"/gim)];
+    consoleLog(`${chartMatches.length} charts found in document.`);
+    chartMatches.forEach(chartMatch => {
+      let chartString = chartMatch[0];
+      let chartClass = chartMatch[1] !== undefined ? chartMatch[1] : '';
+      let chartId = chartMatch[2] !== undefined ? chartMatch[2] : '';
+      reportArray.push(`report-chart ${chartId} ${chartClass}`);
+    });
+    consoleLog(`${chartMatches.length} charts found in document.`);
+
     // tables
+    let tableMatches = [...textOut.matchAll(/<table class="report-table([^"]*)" id="([^"]*)"/gim)];
+    consoleLog(`${tableMatches.length} tables found in document.`);
+
     // list items
+    let listMatches = [...textOut.matchAll(/<li/gim)];
+    consoleLog(`${listMatches.length} list items found in document.`);
+
     // footnotes
-
-
+    let ftnLines = textOut.split('\n');
+    let lineIndex = 0;
+    ftnLines.forEach(line => {
+      lineIndex++;
+      let trimmedLine = line.trim();
+      if(trimmedLine.length > 0) {
+        let footnoteMatches = [...trimmedLine.matchAll(/<a href="#_ftn(\d+)".*?>/gim)];
+        footnoteMatches.forEach(footnoteMatch => {
+          let footnoteString = footnoteMatch[0];
+          let footnoteNum = footnoteMatch[1] !== undefined ? footnoteMatch[1] : '';
+          footnoteArray.push(`ftn${footnoteNum} on line ${lineIndex}`);
+        });
+      }
+    });
+    consoleLog(`${footnoteArray.length} footnotes found in document.`);
+    consoleLog(footnoteArray.toString());
 
 
     // store in documentReportArrays for later use
