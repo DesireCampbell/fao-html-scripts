@@ -102,7 +102,7 @@ export function activate(context: vscode.ExtensionContext) {
     textOut = textOut.replace(/\s(\w+)\s*=\s*([^"'][^>\s]*)/gim, ' $1="$2"'); // no quotes
 
 
-  // P tags should not have space before closing tag, or after opening tag.
+    // P tags should not have space before closing tag, or after opening tag.
     textOut = textOut.replace(/<p>\s+/gim, '<p>');
     textOut = textOut.replace(/\s+<\/p>/gim, '</p>');
 
@@ -184,11 +184,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 
     // remove leading/trailing spaces from each line
-    textOut = textOut.replace(/^ */gim, '');
-    textOut = textOut.replace(/ *$/gim, '');
+    textOut = textOut.replace(/^ +/gim, '');
+    textOut = textOut.replace(/ +$/gim, '');
 
     // remove empty lines
-    textOut = textOut.replace(/^\s*$/gim, '');
+    textOut = textOut.replace(/^\s+$/gim, '');
 
     // remove extra newlines
     textOut = textOut.replace(/\n{2,}/gim, '\n');
@@ -691,6 +691,11 @@ export function activate(context: vscode.ExtensionContext) {
     textOut = textOut.replace(/\s*(<img[^>]*>)\s*<\/p>/gim, '</p>\n$1');
     //remove empty Ps
     textOut = textOut.replace(/<p[^>]*>\s*<\/p>/gim, '');
+
+    // remove extra spaces before closing tags
+    textOut = textOut.replace(/\s+(<\/h\d>)/gim, '$1'); //H1 - H5
+    textOut = textOut.replace(/\s+(<\/td>)/gim, '$1'); //TD
+    textOut = textOut.replace(/\s+(<\/th>)/gim, '$1'); //TH
 
 
 
@@ -1845,6 +1850,79 @@ function getClassedTableHtml(table:string = '') {
     consoleLog(`[WIP] Rename fig files: ${numFound} found, ${numChanged} changed.`);
   });
   context.subscriptions.push(renameFigFiles);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  // // new command template
+  // const faoCommand = vscode.commands.registerCommand('fao-html-scripts.faoCommand', () => {
+  //   faodebug.appendLine('SCRIPT: faoCommand');
+  //   let numFound = 0;
+  //   let numChanged = 0;
+    
+  //   // Get the active text editor
+  //   const editor = vscode.window.activeTextEditor;
+  //   // If there's no active editor, do nothing
+  //   if (!editor) { 
+  //     vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [faoCommand]');
+  //     return; 
+  //   }
+  //   // get text from selection or document
+  //   const textIn = getCurrentSelectionOrDocumentText() || '';
+  //   if (textIn.trim() === '') {
+  //     vscode.window.showInformationMessage('Error: No text found in the current selection or document. [faoCommand]');
+  //     return;
+  //   }
+  //   let textOut = textIn;
+  //   // textOut = formatAsString(textIn);
+
+  //   // command logic goes here
+
+  //   // Finally, replace text
+  //   replaceCurrentSelectionOrDocumentText(textOut);
+  //   // result message for user
+  //   consoleLog(`faoCommand: ${numFound} found, ${numChanged} changed.`);
+  // });
+  // context.subscriptions.push(faoCommand);
+  
+
+
 }
 
 
