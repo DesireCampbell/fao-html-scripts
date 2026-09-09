@@ -1889,6 +1889,76 @@ function getClassedTableHtml(table:string = '') {
 
 
 
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  // Copy Paste Table Styles
+  const copyPasteTableStyles = vscode.commands.registerCommand('fao-html-scripts.copyPasteTableStyles', () => {
+    faodebug.appendLine('SCRIPT: copyPasteTableStyles');
+    let numFound = 0;
+    let numChanged = 0;
+    
+    // Get the active text editor
+    const editor = vscode.window.activeTextEditor;
+    // If there's no active editor, do nothing
+    if (!editor) { 
+      vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [copyPasteTableStyles]');
+      return; 
+    }
+    // get text from selection or document
+    const textIn = getCurrentSelectionOrDocumentText() || '';
+    if (textIn.trim() === '') {
+      vscode.window.showInformationMessage('Error: No text found in the current selection or document. [copyPasteTableStyles]');
+      return;
+    }
+    let textOut = textIn;
+    // textOut = formatAsString(textIn);
+
+    // command logic goes here
+
+    // Finally, replace text
+    replaceCurrentSelectionOrDocumentText(textOut);
+    // result message for user
+    consoleLog(`copyPasteTableStyles: ${numFound} found, ${numChanged} changed.`);
+  });
+  context.subscriptions.push(copyPasteTableStyles);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // // new command template
   // const faoCommand = vscode.commands.registerCommand('fao-html-scripts.faoCommand', () => {
