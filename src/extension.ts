@@ -1893,15 +1893,14 @@ function getClassedTableHtml(table:string = '') {
   // Document Report
   // scans document for key elemenmts and generates an outline/report for 
   // comparison with same report in other language.
-  // let documentReportArrays:any[];
+  let prevDocOutlines = {};
   const documentReport = vscode.commands.registerCommand('fao-html-scripts.documentReport', () => {
     faodebug.appendLine('SCRIPT: documentReport');
     let numFound = 0;
     let numChanged = 0;
     let outlineArray:string[] = [];
     let reportArray:string[] = [];
-    let footnoteArray:string[] = [];
-
+    let ftnArray:string[] = [];
     
     // Get the active text editor
     const editor = vscode.window.activeTextEditor;
@@ -1917,6 +1916,8 @@ function getClassedTableHtml(table:string = '') {
       return;
     }
     let textOut = textIn;
+
+    let docName:string = editor.document.fileName;
     
     // OUTLINE
 
@@ -1964,6 +1965,7 @@ function getClassedTableHtml(table:string = '') {
     
     consoleLog(`documentReport: ${outlineArray.length} lines found in document.`);
     consoleLog(outlineArray.toString());
+    // save for later comparison with other language document
     
     
     // REPORT
@@ -1984,29 +1986,47 @@ function getClassedTableHtml(table:string = '') {
     consoleLog(`${tableMatches.length} tables found in document.`);
 
     // list items
-    let listMatches = [...textOut.matchAll(/<li/gim)];
+    let listMatches:RegExpExecArray[] = [...textOut.matchAll(/<li/gim)];
     consoleLog(`${listMatches.length} list items found in document.`);
 
     // footnotes
-    let ftnLines = textOut.split('\n');
-    let lineIndex = 0;
+    let ftnCount:number = 0;
+    let refCount:number = 0;
+    let ftnLines:string[] = textOut.split('\n');
+    let lineIndex:number = 0;
+    let ftnNumArray:number[] = [];
+    let nextExpectedFtnNum:number = 1;
+    // check each line for ftn links
     ftnLines.forEach(line => {
       lineIndex++;
-      let trimmedLine = line.trim();
+      let trimmedLine:string = line.trim();
       if(trimmedLine.length > 0) {
-        let footnoteMatches = [...trimmedLine.matchAll(/<a href="#_ftn(\d+)".*?>/gim)];
-        footnoteMatches.forEach(footnoteMatch => {
-          let footnoteString = footnoteMatch[0];
-          let footnoteNum = footnoteMatch[1] !== undefined ? footnoteMatch[1] : '';
-          footnoteArray.push(`ftn${footnoteNum} on line ${lineIndex}`);
+        let ftnMatches = [...trimmedLine.matchAll(/<a href="#_ftn(\d+)".*?>/gim)];
+        ftnMatches.forEach(ftnMatch => {
+          let ftnString:string = ftnMatch[0];
+          let ftnNum:number = parseInt(ftnMatch[1] !== undefined ? ftnMatch[1] : '');
+          ftnArray.push(`ftn${ftnNum} on line ${lineIndex}`);
+          ftnNumArray.push(ftnNum);
+          nextExpectedFtnNum++;
         });
       }
     });
-    consoleLog(`${footnoteArray.length} footnotes found in document.`);
-    consoleLog(footnoteArray.toString());
+    // check that ftn numbers are sequential
+    let iCheck:number = 0;
+    for (const i in ftnNumArray) {
+      // (i+1) == ftnNumArray[i] == iCheck -> correct
+      if (parseInt(i)+1 == ftnNumArray[i] && ftnNumArray[i] == iCheck+1) {
+        // correct
+      } else {
+        // incorrect
+      }
+    }
+    let refMatches = [...textOut.matchAll(/<a href="#_ftnref(\d+)".*?>/gim)];
+    consoleLog(`${ftnArray.length} footnotes found in document.`);
+    consoleLog(ftnArray.toString());
 
 
-    // store in documentReportArrays for later use
+    // store in documentOutlineArray for later use
 
 
     // Finally, replace text
