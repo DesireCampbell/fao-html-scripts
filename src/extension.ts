@@ -686,8 +686,11 @@ export function activate(context: vscode.ExtensionContext) {
     
     
     // remove IMGs inside of other tags
+    // normalized text should already put a newline before all IMGs, so we just need to deal with any text after the IMG
     let textNormal = formatAsNormal(textOut);
-    textNormal = textNormal.replace(/([^\n])(<img[^>]+>)([^\n]+)\n/gim, '$1$3\n$2\n');
+    // textNormal = textNormal.replace(/([^\n])(<img[^>]+>)([^\n]+)\n/gim, '$1$3\n$2\n');
+    textNormal = textNormal.replace(/(<img[^>]+>)([^\n]+)\n/gim, '$2\n$1\n');
+    // format as string again for the rest of strip styles
     textOut = formatAsString(textNormal);
 
     // remove empty IMGs
