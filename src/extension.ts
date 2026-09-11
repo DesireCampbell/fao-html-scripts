@@ -112,7 +112,7 @@ export function activate(context: vscode.ExtensionContext) {
     // todo: add spaces between words
 
     // IMG should be on own line if not inside a P tag
-    textOut = textOut.replace(/<\/p>\s*(<img[^>]*>)(?![^<]*<\/)\s*/gim, '</p>\n$1\n');
+    // textOut = textOut.replace(/<\/p>\s*(<img[^>]*>)(?![^<]*<\/)\s*/gim, '</p>\n$1\n');
 
 
 
@@ -120,7 +120,7 @@ export function activate(context: vscode.ExtensionContext) {
     const newlineBeforeTags = [
       'p',
       'hr',
-      // 'img',
+      'img',
       'div','/div',
       'details','/details',
       'figure', '/figure', 
@@ -683,6 +683,16 @@ export function activate(context: vscode.ExtensionContext) {
     textOut = textOut.replace(/(<td[^>]*>)\s*<p[^>]*>([\s\S]*?)<\/p>\s*(<\/td>)/gim, '$1$2$3');
     textOut = textOut.replace(/(<th[^>]*>)\s*<p[^>]*>([\s\S]*?)<\/p>\s*(<\/th>)/gim, '$1$2$3');
 
+    
+    
+    // remove IMGs inside of other tags
+    // normalized text should already put a newline before all IMGs, so we just need to deal with any text after the IMG
+    let textNormal = formatAsNormal(textOut);
+    // textNormal = textNormal.replace(/([^\n])(<img[^>]+>)([^\n]+)\n/gim, '$1$3\n$2\n');
+    textNormal = textNormal.replace(/(<img[^>]+>)([^\n]+)\n/gim, '$2\n$1\n');
+    // format as string again for the rest of strip styles
+    textOut = formatAsString(textNormal);
+
     // remove empty IMGs
     textOut = textOut.replace(/<img>/gim, '');
     // remove lone IMGs inside Ps
@@ -845,6 +855,8 @@ export function activate(context: vscode.ExtensionContext) {
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // format charts
+  // todo: add more formats to format charts
+  // todo: rewrite each format's regex with named groups so that the same parsing code can be used for all formats
   const formatCharts = vscode.commands.registerCommand('fao-html-scripts.formatCharts', () => {
     faodebug.appendLine('SCRIPT: formatCharts');
     // consoleLog("fao-html-scripts.formatCharts");
@@ -865,6 +877,71 @@ export function activate(context: vscode.ExtensionContext) {
     // let textOut = formatAsString(textIn);
     let textOut = textIn;
 
+
+    // format 1
+    // single IMG with title/yaxis/notes/source in alt text
+    const rCharts1 = /<img src="\S*" alt="(?:Text Box: )?(?:Figure|Chart) [A-Z0-9]+[\.\-‑ ]?[A-Z0-9]*:?[\s\S]*?&#13;&#10;[\s\S]*?&#13;&#10;Sources?\s?:[\s\S]*?&#13;&#10;">/gim;
+    const matchedCharts1 = [...textOut.matchAll(rCharts1)];
+    numFound += matchedCharts1.length;
+    consoleLog("found " + matchedCharts1.length + " charts in format 1");
+
+    matchedCharts1.forEach(match => {
+      faodebug.appendLine(match[0]);
+      let numMajor       = '';
+      let numSeparator   = '';
+      let numMinor       = '';
+      let title          = '';
+      let notes:string[] = [];
+      let source         = '';
+      // temp variables for parsing
+      let yAxisLabel     = '';
+      let remainingLines = '';
+
+      const s = [...match[0].matchAll(/<img src="\S*" alt="(?:Text Box: )?(?:Figure|Chart) ([A-Z0-9]+)([\.\-‑ ])?([A-Z0-9]*)([\s\S]+)">/gim)][0];
+      if(s) {
+        numMajor       = s[1] !== undefined ? s[1] : '';
+        numSeparator   = s[2] !== undefined ? s[2] : '';
+        numMinor       = s[3] !== undefined ? s[3] : '';
+        remainingLines = s[4] !== undefined ? s[4] : '';
+
+        // parse remainingLines for title, yaxis, notes, source
+        let lines = remainingLines.split('&#13;&#10;');
+        lines.forEach(line => {
+          let trimmedLine = line.trim();
+          // skip empty lines
+          if (trimmedLine.length < 1) { return; } 
+          // first line is title
+          if (title.length < 1) {
+            title = trimmedLine;
+            return;
+          }
+          // next line is y-axis label
+          if (yAxisLabel.length < 1) {
+            yAxisLabel = trimmedLine;
+            return;
+          }
+          // if line starts with "source" or "sources", it's the source line
+          if (source.length < 1 && trimmedLine.toLowerCase().startsWith('source')) {
+            source = trimmedLine;
+            return;
+          }
+          // skip IMG
+          if(trimmedLine.toLowerCase().startsWith('<img')) { return; }
+          // any other text is a note
+          notes.push(trimmedLine);
+        });
+        // faodebug.appendLine('');
+        // faodebug.appendLine('Figure ' + numMajor  + numSeparator + numMinor + ': ' + title);
+        // faodebug.appendLine(notes.join('\n'));
+        // faodebug.appendLine(source);
+        // faodebug.appendLine('- - - - - - - - - - - - - - - - - - - - -');
+        // replace the matched text with the new chart HTML
+        let newChart = getChartHtml('Figure', numMajor, numSeparator, numMinor, title, notes, source);
+        // format 1 charts are ususally half-width right-aligned, so add a class for that
+        newChart = newChart.replace('<div class="report-chart"', '<div class="report-chart float-right"');
+        textOut = textOut.replace(match[0], newChart);
+      }
+    });
 
     // format 5
     // [figure XX] and [title] and [y-axis label] in separate paragraphs
