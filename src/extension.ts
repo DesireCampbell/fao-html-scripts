@@ -1891,8 +1891,9 @@ function getClassedTableHtml(table:string = '') {
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // Copy Paste Table Styles
-  const copyPasteTableStyles = vscode.commands.registerCommand('fao-html-scripts.copyPasteTableStyles', () => {
-    faodebug.appendLine('SCRIPT: copyPasteTableStyles');
+  let tableStylesClipboard:any[] = [];
+  const copyTableStyles = vscode.commands.registerCommand('fao-html-scripts.copyTableStyles', () => {
+    faodebug.appendLine('SCRIPT: copyTableStyles');
     let numFound = 0;
     let numChanged = 0;
     
@@ -1900,26 +1901,92 @@ function getClassedTableHtml(table:string = '') {
     const editor = vscode.window.activeTextEditor;
     // If there's no active editor, do nothing
     if (!editor) { 
-      vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [copyPasteTableStyles]');
+      vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [copyTableStyles]');
       return; 
     }
     // get text from selection or document
     const textIn = getCurrentSelectionOrDocumentText() || '';
     if (textIn.trim() === '') {
-      vscode.window.showInformationMessage('Error: No text found in the current selection or document. [copyPasteTableStyles]');
+      vscode.window.showInformationMessage('Error: No text found in the current selection or document. [copyTableStyles]');
       return;
     }
     let textOut = textIn;
     // textOut = formatAsString(textIn);
 
-    // command logic goes here
+
+    // COPY to tableStylesClipboard
+
+    // find tables
+    let tableMatches = [...textOut.matchAll(/<table[\s\S]*?<\/table>/gim)];
+    numFound = tableMatches.length;
+    faodebug.appendLine(tableMatches.length + ' tables found');
+    tableStylesClipboard = [];
+    // find col, tr, th/td
+    // find class, style, rowspan, colspan, scope
+
+
+
+    // PASTE from tableStylesClipboard
+
+    // find tables - same number of tables as in tableStylesClipboard? if not, prompt user to confirm
+    // find col, tr, th/td - same number of col, tr, th/td as in tableStylesClipboard? if not, prompt user to confirm
+    // replace class, style, rowspan, colspan, scope
+
+
 
     // Finally, replace text
     replaceCurrentSelectionOrDocumentText(textOut);
     // result message for user
-    consoleLog(`copyPasteTableStyles: ${numFound} found, ${numChanged} changed.`);
+    consoleLog(`copyTableStyles: ${numFound} found, ${numChanged} changed.`);
   });
-  context.subscriptions.push(copyPasteTableStyles);
+  context.subscriptions.push(copyTableStyles);
+
+
+  const pasteTableStyles = vscode.commands.registerCommand('fao-html-scripts.pasteTableStyles', () => {
+    faodebug.appendLine('SCRIPT: pasteTableStyles');
+
+    if (tableStylesClipboard.length < 1) {
+      consoleLog('Error: No table styles found in clipboard. Please run "Copy Table Styles" first. [pasteTableStyles]');
+      return;
+    }
+
+    let numFound = 0;
+    let numChanged = 0;
+    
+    // Get the active text editor
+    const editor = vscode.window.activeTextEditor;
+    // If there's no active editor, do nothing
+    if (!editor) { 
+      vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [pasteTableStyles]');
+      return; 
+    }
+    // get text from selection or document
+    const textIn = getCurrentSelectionOrDocumentText() || '';
+    if (textIn.trim() === '') {
+      vscode.window.showInformationMessage('Error: No text found in the current selection or document. [pasteTableStyles]');
+      return;
+    }
+    let textOut = textIn;
+    // textOut = formatAsString(textIn);
+
+
+    // PASTE from tableStylesClipboard
+
+    // find tables - same number of tables as in tableStylesClipboard? if not, prompt user to confirm
+    let tableMatches = [...textOut.matchAll(/<table[\s\S]*?<\/table>/gim)];
+    numFound = tableMatches.length;
+    faodebug.appendLine(tableMatches.length + ' tables found');
+    // find col, tr, th/td - same number of col, tr, th/td as in tableStylesClipboard? if not, prompt user to confirm
+    // replace class, style, rowspan, colspan, scope
+
+
+
+    // Finally, replace text
+    replaceCurrentSelectionOrDocumentText(textOut);
+    // result message for user
+    consoleLog(`pasteTableStyles: ${numFound} found, ${numChanged} changed.`);
+  });
+  context.subscriptions.push(pasteTableStyles);
 
 
 
