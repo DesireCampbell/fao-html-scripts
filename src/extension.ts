@@ -112,7 +112,7 @@ export function activate(context: vscode.ExtensionContext) {
     // todo: add spaces between words
 
     // IMG should be on own line if not inside a P tag
-    textOut = textOut.replace(/<\/p>\s*(<img[^>]*>)(?![^<]*<\/)\s*/gim, '</p>\n$1\n');
+    // textOut = textOut.replace(/<\/p>\s*(<img[^>]*>)(?![^<]*<\/)\s*/gim, '</p>\n$1\n');
 
 
 
@@ -120,7 +120,7 @@ export function activate(context: vscode.ExtensionContext) {
     const newlineBeforeTags = [
       'p',
       'hr',
-      // 'img',
+      'img',
       'div','/div',
       'details','/details',
       'figure', '/figure', 
@@ -683,6 +683,13 @@ export function activate(context: vscode.ExtensionContext) {
     textOut = textOut.replace(/(<td[^>]*>)\s*<p[^>]*>([\s\S]*?)<\/p>\s*(<\/td>)/gim, '$1$2$3');
     textOut = textOut.replace(/(<th[^>]*>)\s*<p[^>]*>([\s\S]*?)<\/p>\s*(<\/th>)/gim, '$1$2$3');
 
+    
+    
+    // remove IMGs inside of other tags
+    let textNormal = formatAsNormal(textOut);
+    textNormal = textNormal.replace(/([^\n])(<img[^>]+>)([^\n]+)\n/gim, '$1$3\n$2\n');
+    textOut = formatAsString(textNormal);
+
     // remove empty IMGs
     textOut = textOut.replace(/<img>/gim, '');
     // remove lone IMGs inside Ps
@@ -845,6 +852,8 @@ export function activate(context: vscode.ExtensionContext) {
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // format charts
+  // todo: add more formats to format charts
+  // todo: rewrite each format's regex with named groups so that the same parsing code can be used for all formats
   const formatCharts = vscode.commands.registerCommand('fao-html-scripts.formatCharts', () => {
     faodebug.appendLine('SCRIPT: formatCharts');
     // consoleLog("fao-html-scripts.formatCharts");
@@ -865,6 +874,60 @@ export function activate(context: vscode.ExtensionContext) {
     // let textOut = formatAsString(textIn);
     let textOut = textIn;
 
+
+    // format 1
+    // single IMG with tiel/notes/source in alt text
+    const rCharts1 = /<img src="\S*" alt="(?:Text Box: )?(?:Figure|Chart) [A-Z0-9]+[\.\-‑ ]?[A-Z0-9]*:?[\s\S]*?&#13;&#10;[\s\S]*?&#13;&#10;Sources?\s?:[\s\S]*?&#13;&#10;">/gim;
+    const matchedCharts1 = [...textOut.matchAll(rCharts1)];
+    numFound += matchedCharts1.length;
+    consoleLog("found " + matchedCharts1.length + " charts in format 1");
+
+    matchedCharts1.forEach(match => {
+      faodebug.appendLine(match[0]);
+      let numMajor       = '';
+      let numSeparator   = '';
+      let numMinor       = '';
+      let title          = '';
+      let notes:string[] = [];
+      let source         = '';
+      // temp variables for parsing
+      let yAxisLabel     = '';
+      let remainingLines = '';
+
+      const s = [...match[0].matchAll(/<img src="\S*" alt="(?:Text Box: )?(?:Figure|Chart) ([A-Z0-9]+)([\.\-‑ ])?([A-Z0-9]*):?([\s\S]*?)&#13;&#10;([\s\S]*?)">/gim)][0];
+      if(s) {
+        numMajor       = s[1] !== undefined ? s[1] : '';
+        numSeparator   = s[2] !== undefined ? s[2] : '';
+        numMinor       = s[3] !== undefined ? s[3] : '';
+        title          = s[4] !== undefined ? s[4] : '';
+        yAxisLabel     = s[5] !== undefined ? s[5] : ''; // not used
+        remainingLines = s[6] !== undefined ? s[6] : '';
+
+        //remove P tags from remaining lines
+        remainingLines = remainingLines.replaceAll('<p>', '');
+        remainingLines = remainingLines.replaceAll('</p>', '');
+        let lines = remainingLines.split(/\n/);
+        lines.forEach(line => {
+          // faodebug.appendLine(`remainingLines: ${line}`);
+          if(line.toLowerCase().startsWith('source')) {
+            // this is the source line
+            source = line;
+          } else if(line.toLowerCase().startsWith('<img')) {
+            // skip this line
+          } else {
+            notes.push(line);
+          }
+        });
+        // faodebug.appendLine('');
+        // faodebug.appendLine('Figure ' + numMajor  + numSeparator + numMinor + ': ' + title);
+        // faodebug.appendLine(notes.join('\n'));
+        // faodebug.appendLine(source);
+        // faodebug.appendLine('- - - - - - - - - - - - - - - - - - - - -');
+        // replace the matched text with the new chart HTML
+        let newChart = getChartHtml('Figure', numMajor, numSeparator, numMinor, title, notes, source);
+        textOut = textOut.replace(match[0], newChart);
+      }
+    });
 
     // format 5
     // [figure XX] and [title] and [y-axis label] in separate paragraphs
