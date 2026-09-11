@@ -879,7 +879,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 
     // format 1
-    // single IMG with tiel/notes/source in alt text
+    // single IMG with title/yaxis/notes/source in alt text
     const rCharts1 = /<img src="\S*" alt="(?:Text Box: )?(?:Figure|Chart) [A-Z0-9]+[\.\-‑ ]?[A-Z0-9]*:?[\s\S]*?&#13;&#10;[\s\S]*?&#13;&#10;Sources?\s?:[\s\S]*?&#13;&#10;">/gim;
     const matchedCharts1 = [...textOut.matchAll(rCharts1)];
     numFound += matchedCharts1.length;
@@ -897,29 +897,38 @@ export function activate(context: vscode.ExtensionContext) {
       let yAxisLabel     = '';
       let remainingLines = '';
 
-      const s = [...match[0].matchAll(/<img src="\S*" alt="(?:Text Box: )?(?:Figure|Chart) ([A-Z0-9]+)([\.\-‑ ])?([A-Z0-9]*):?([\s\S]*?)&#13;&#10;([\s\S]*?)">/gim)][0];
+      const s = [...match[0].matchAll(/<img src="\S*" alt="(?:Text Box: )?(?:Figure|Chart) ([A-Z0-9]+)([\.\-‑ ])?([A-Z0-9]*)([\s\S]+)">/gim)][0];
       if(s) {
         numMajor       = s[1] !== undefined ? s[1] : '';
         numSeparator   = s[2] !== undefined ? s[2] : '';
         numMinor       = s[3] !== undefined ? s[3] : '';
-        title          = s[4] !== undefined ? s[4] : '';
-        yAxisLabel     = s[5] !== undefined ? s[5] : ''; // not used
-        remainingLines = s[6] !== undefined ? s[6] : '';
+        remainingLines = s[4] !== undefined ? s[4] : '';
 
-        //remove P tags from remaining lines
-        remainingLines = remainingLines.replaceAll('<p>', '');
-        remainingLines = remainingLines.replaceAll('</p>', '');
-        let lines = remainingLines.split(/\n/);
+        // parse remainingLines for title, yaxis, notes, source
+        let lines = remainingLines.split('&#13;&#10;');
         lines.forEach(line => {
-          // faodebug.appendLine(`remainingLines: ${line}`);
-          if(line.toLowerCase().startsWith('source')) {
-            // this is the source line
-            source = line;
-          } else if(line.toLowerCase().startsWith('<img')) {
-            // skip this line
-          } else {
-            notes.push(line);
+          let trimmedLine = line.trim();
+          // skip empty lines
+          if (trimmedLine.length < 1) { return; } 
+          // first line is title
+          if (title.length < 1) {
+            title = trimmedLine;
+            return;
           }
+          // next line is y-axis label
+          if (yAxisLabel.length < 1) {
+            yAxisLabel = trimmedLine;
+            return;
+          }
+          // if line starts with "source" or "sources", it's the source line
+          if (source.length < 1 && trimmedLine.toLowerCase().startsWith('source')) {
+            source = trimmedLine;
+            return;
+          }
+          // skip IMG
+          if(trimmedLine.toLowerCase().startsWith('<img')) { return; }
+          // any other text is a note
+          notes.push(trimmedLine);
         });
         // faodebug.appendLine('');
         // faodebug.appendLine('Figure ' + numMajor  + numSeparator + numMinor + ': ' + title);
@@ -928,6 +937,8 @@ export function activate(context: vscode.ExtensionContext) {
         // faodebug.appendLine('- - - - - - - - - - - - - - - - - - - - -');
         // replace the matched text with the new chart HTML
         let newChart = getChartHtml('Figure', numMajor, numSeparator, numMinor, title, notes, source);
+        // format 1 charts are ususally half-width right-aligned, so add a class for that
+        newChart = newChart.replace('<div class="report-chart"', '<div class="report-chart float-right"');
         textOut = textOut.replace(match[0], newChart);
       }
     });
