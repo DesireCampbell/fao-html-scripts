@@ -1966,6 +1966,193 @@ function getClassedTableHtml(table:string = '') {
 
 
 
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  // Copy Paste Table Styles
+  const copyTableStyles = vscode.commands.registerCommand('fao-html-scripts.copyTableStyles', () => {
+    faodebug.appendLine('SCRIPT: copyTableStyles');
+    let numFound = 0;
+    let numChanged = 0;
+    
+    // Get the active text editor
+    const editor = vscode.window.activeTextEditor;
+    // If there's no active editor, do nothing
+    if (!editor) { 
+      vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [copyTableStyles]');
+      return; 
+    }
+    // get text from selection or document
+    const textIn = getCurrentSelectionOrDocumentText() || '';
+    if (textIn.trim() === '') {
+      vscode.window.showInformationMessage('Error: No text found in the current selection or document. [copyTableStyles]');
+      return;
+    }
+    let textOut = textIn;
+    // textOut = formatAsString(textIn);
+
+    let tableStylesClipboard:any[] = [];
+
+    // find tables
+    let tableMatches = [...textOut.matchAll(/<table[\s\S]*?<\/table>/gim)];
+    numFound = tableMatches.length;
+    if (numFound === 0) {
+      vscode.window.showInformationMessage('Error: No tables found in the current selection or document. [copyTableStyles]');
+      return;
+    }
+    faodebug.appendLine(tableMatches.length + ' tables found');
+
+    tableMatches.forEach(tableMatch => {
+      let tableString:string = tableMatch[0];
+      let tableStyles:any = {
+        'col': [],
+        'row': [],
+        'cell': [],
+      };
+      // <col...>, <colgroup...>, </colgroup...>
+      let colMatches = [...tableString.matchAll(/<\/?col[^>]*>/gim)];
+      colMatches.forEach(match => {
+        tableStyles.col.push(match[0]);
+      });
+      // <tr...>
+      let rowMatches = [...tableString.matchAll(/<tr[^>]*>/gim)];
+      rowMatches.forEach(match => {
+        tableStyles.row.push(match[0]);
+      });
+      // <th...>, <td...>
+      let cellMatches = [...tableString.matchAll(/<t[dh][^>]*>/gim)];
+      cellMatches.forEach(match => {
+        tableStyles.cell.push(match[0]);
+      });
+      // THEAD, TBODY, TFOOT ?
+      // save this table to clipboard
+      tableStylesClipboard.push(tableStyles);
+    });
+
+    // store table styles in extension global state
+    context.globalState.update('tableStylesClipboard', tableStylesClipboard);
+
+    // result message for user
+    consoleLog(`copyTableStyles: ${numFound} found, ${numChanged} changed.`);
+  });
+  context.subscriptions.push(copyTableStyles);
+
+  const pasteTableStyles = vscode.commands.registerCommand('fao-html-scripts.pasteTableStyles', () => {
+    faodebug.appendLine('SCRIPT: pasteTableStyles');
+
+    // get table styles from extension global state
+    let tableStylesClipboard = context.globalState.get<any[]>('tableStylesClipboard');
+    if (!tableStylesClipboard) {
+      consoleLog('Error: No table styles found in clipboard. Please run "Copy Table Styles" first. [pasteTableStyles]');
+      return;
+    }
+    // tableStylesClipboard = [...tableStylesClipboard];
+    faodebug.appendLine(tableStylesClipboard.length + ' tables found in clipboard');
+
+    let numFound = 0;
+    let numChanged = 0;
+    
+    // Get the active text editor
+    const editor = vscode.window.activeTextEditor;
+    // If there's no active editor, do nothing
+    if (!editor) { 
+      vscode.window.showInformationMessage('Error: FAO HTML Scripts needs an active document to work on. [pasteTableStyles]');
+      return; 
+    }
+    // get text from selection or document
+    const textIn = getCurrentSelectionOrDocumentText() || '';
+    if (textIn.trim() === '') {
+      vscode.window.showInformationMessage('Error: No text found in the current selection or document. [pasteTableStyles]');
+      return;
+    }
+    let textOut = textIn;
+    // textOut = formatAsString(textIn);
+
+
+    // PASTE from tableStylesClipboard
+    // faodebug.appendLine(tableStylesClipboard.toString());
+
+    // find tables
+    let tableMatches = [...textOut.matchAll(/<table[\s\S]*?<\/table>/gim)];
+    numFound = tableMatches.length;
+    if (numFound === 0) {
+      vscode.window.showInformationMessage('Error: No tables found in the current selection or document. [pasteTableStyles]');
+      return;
+    }
+    faodebug.appendLine(tableMatches.length + ' tables found in document');
+
+    tableMatches.forEach( (tableMatch, i) => {
+      let tableString:string = tableMatch[0];
+      let tableStyles = tableStylesClipboard[i];
+      faodebug.appendLine(`Table ${i}`);
+
+      // replace whole col block
+      let copiedColBlock = tableStyles.col.join('\n');
+      tableString = tableString.replaceAll(/<\/?col[^>]*>[\s\S]*<\/?col[^>]*>/gim,copiedColBlock);
+
+      // replace each row
+      let copiedRows = [...tableStyles.row];
+      let rowMatches = [...tableString.matchAll(/<tr[^>]*>/gim)];
+      faodebug.appendLine(`-> ${rowMatches.length} rows found in table, ${copiedRows.length} rows found in clipboard`);
+      tableString = tableString.replaceAll(/<tr[^>]*>/gim, function(){ return copiedRows.shift(); });
+      
+      //replace each cell opening tag, leave content, parse tag name and match closing tag
+      let copiedCells = [...tableStyles.cell];
+      let cellMatches = [...tableString.matchAll(/<t[dh]([^>]*)>/gim)];
+      faodebug.appendLine(`-> ${cellMatches.length} rows found in table, ${copiedCells.length} cells found in clipboard`);
+      tableString = tableString.replaceAll(/<t[dh]([^>]*)>/gim, function(){ 
+        return copiedCells.shift(); 
+      });
+      tableString = tableString.replaceAll(/<(t[dh])([\s\S]*)<\/(t[dh])>/gim,'<$1$2</$1>');
+
+      // replace table
+      textOut = textOut.replaceAll(tableMatch[0],tableString);
+    });
+
+
+    // Finally, replace text
+    replaceCurrentSelectionOrDocumentText(textOut);
+    // result message for user
+    consoleLog(`pasteTableStyles: ${numFound} found, ${numChanged} changed.`);
+  });
+  context.subscriptions.push(pasteTableStyles);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // // new command template
   // const faoCommand = vscode.commands.registerCommand('fao-html-scripts.faoCommand', () => {
