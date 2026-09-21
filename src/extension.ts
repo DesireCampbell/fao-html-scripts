@@ -1725,7 +1725,7 @@ function getClassedTableHtml(table:string = '') {
       textOut = textOut.replaceAll(en,fr);
     });
     // 1A. replace src subdirectory
-    textOut = textOut.replace(/( src="[^"]*)\/en\/([^"]*)"/gim,'$1/fr/$2');
+    textOut = textOut.replace(/( src="[^"]*)\/en\/([^"]*)"/gim,'$1/fr/$2"');
     // let srcMatches = [...textOut.matchAll(/( src="[^"]*)\/en\/([^"]*)"/gim)];
     // numFound =+ srcMatches.length;
     // numChanged =+ srcMatches.length;
