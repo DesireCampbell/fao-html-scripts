@@ -684,16 +684,9 @@ export function activate(context: vscode.ExtensionContext) {
       faodebug.appendLine(match);
       return match.replaceAll(/<\/?p>/gim,' '); 
     });
-    // textOut = textOut.replaceAll(/<th[\s\S]*?\/th>/gim, function(match){ 
-    //   faodebug.appendLine(match);
-    //   return match.replaceAll(/<\/?p>/gim,' '); 
-    // });
-    // textOut = textOut.replaceAll(/<td[\s\S]*?\/td>/gim, function(match){ 
-    //   faodebug.appendLine(match);
-    //   return match.replaceAll(/<\/?p>/gim,' '); 
-    // });
-    // textOut = textOut.replace(/(<td[^>]*>)\s*<p[^>]*>([\s\S]*?)<\/p>\s*(<\/td>)/gim, '$1$2$3');
-    // textOut = textOut.replace(/(<th[^>]*>)\s*<p[^>]*>([\s\S]*?)<\/p>\s*(<\/th>)/gim, '$1$2$3');
+    textOut = textOut.replaceAll(/(<t[dh][^>]*>)\s+/gim,'$1');
+    textOut = textOut.replaceAll(/\s+(\/<t[dh])/gim,'$1');
+
 
     
     
