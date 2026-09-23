@@ -680,8 +680,20 @@ export function activate(context: vscode.ExtensionContext) {
     textOut = textOut.replace(/<\s*([^>]*?)\s*>/gim, '<$1>');
 
     // remove Ps inside TDs / THs
-    textOut = textOut.replace(/(<td[^>]*>)\s*<p[^>]*>([\s\S]*?)<\/p>\s*(<\/td>)/gim, '$1$2$3');
-    textOut = textOut.replace(/(<th[^>]*>)\s*<p[^>]*>([\s\S]*?)<\/p>\s*(<\/th>)/gim, '$1$2$3');
+    textOut = textOut.replaceAll(/<table[\s\S]*?\/table>/gim, function(match){ 
+      faodebug.appendLine(match);
+      return match.replaceAll(/<\/?p>/gim,' '); 
+    });
+    // textOut = textOut.replaceAll(/<th[\s\S]*?\/th>/gim, function(match){ 
+    //   faodebug.appendLine(match);
+    //   return match.replaceAll(/<\/?p>/gim,' '); 
+    // });
+    // textOut = textOut.replaceAll(/<td[\s\S]*?\/td>/gim, function(match){ 
+    //   faodebug.appendLine(match);
+    //   return match.replaceAll(/<\/?p>/gim,' '); 
+    // });
+    // textOut = textOut.replace(/(<td[^>]*>)\s*<p[^>]*>([\s\S]*?)<\/p>\s*(<\/td>)/gim, '$1$2$3');
+    // textOut = textOut.replace(/(<th[^>]*>)\s*<p[^>]*>([\s\S]*?)<\/p>\s*(<\/th>)/gim, '$1$2$3');
 
     
     
@@ -712,8 +724,8 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Finally, replace text
     // replaceCurrentSelectionOrDocumentText(textOut);
-    // replaceCurrentSelectionOrDocumentText(formatAsNormal(textOut));
-    replaceCurrentSelectionOrDocumentText(formatAsPretty(textOut));
+    replaceCurrentSelectionOrDocumentText(formatAsNormal(textOut));
+    // replaceCurrentSelectionOrDocumentText(formatAsPretty(textOut));
   });
   context.subscriptions.push(stripStyles);
 
